@@ -1,12 +1,12 @@
 # CHANGELOG
 
-**Additions [+], modifications [~] and deletions [x] are described per version in this document.**
+**Additions [+], modifications [~], deletions [x] and notes [!] are described per version in this document.**
 
 
 
 ### v1.0.0
 
-  * **Released on GitHub & PyPi**
+  * **[!]** **Released on GitHub & PyPi**
 
 
 ### v1.3.0
@@ -57,9 +57,9 @@
   * **[+]** Added MQTT Protocol module
     * MQTT Header
     * Connect
-    * Connect Acknowlegdement
+    * Connect Acknowledgement
     * Subscribe Request
-    * Subscribe Acknowlegdement
+    * Subscribe Acknowledgement
     * Publish
   * **[~]** Updated installation instructions in `README.md`
 
@@ -71,12 +71,21 @@
 
 ### v2.0.0
 
-  * **Reupload on GitHub & PyPi**
-  * new GitHub url: `https://github.com/c0mplh4cks/packnet`
-  * new PyPi url: `https://pypi.org/project/packnet`
+  * **[!]** **Reupload on GitHub & PyPi**
+    * new GitHub url: `https://github.com/c0mplh4cks/packnet`
+    * new PyPi url: `https://pypi.org/project/packnet`
   * **[~]** Renamed package from `c0mplh4cks-pylib` to `packnet`
   * **[~]** Changed Header object name to `Header` in every Protocol module
   * **[~]** Modified imports in `__init__.py`
   * **[x]** Removed `examples`
   * **[x]** Removed `screem`
   * **[x]** Removed usage instructions
+
+
+### v2.0.1
+
+  * **[+]** Documentation added in `README.md`
+  * **[~]** Renamed `SubscribeREQ` to `Subscribe` in MQTT Protocol module
+  * **[~]** Fixed `__init__.py` by importing every Protocol module
+  * **[~]** Removed `vhl` attribute in IPv4 Header and replaced by version and header length
+  * **[~]** Changed 0b0110 to 6 in IPv6 Header object for improved readability
