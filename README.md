@@ -44,7 +44,7 @@ ____
 
 ## About
 
-This package is created to build low-level networking packets which can be used when building verious types of applications. Using this package it is possible to make packets ranging from OSI model level 2 to level 7. One of the endless applications could be a network device discovery tool using the address resolution protocol for example. Apart from only building numerous headers and payloads, this package makes it also possible to read received data and extract usefull information, making it possible to interact with a Python script.
+This package is created to build low-level networking packets which can be used when building various types of applications. Using this package, it is possible to make packets ranging from OSI model level 2 to level 7. One of the endless applications could be a network device discovery tool using the address resolution protocol for example. Apart from only building numerous headers and payloads, this package makes it also possible to read received data and extract usefull information, making it possible to interact with a Python script.
 
 
 ____
@@ -374,7 +374,7 @@ The following will show how this package can be installed.
 
 ### Installation from PyPi
 
-install package by using pip
+Install package by using `pip`:
 ```
 pip3 install packnet
 ```
@@ -386,17 +386,17 @@ pip install packnet
 
 ### Installation from Github
 
-clone the repository
+Clone the repository:
 ```
 git clone https://github.com/c0mplh4cks/packnet
 ```
 
-move inside the directory
+Move inside the directory:
 ```
 cd packnet
 ```
 
-install the library by running the following command
+Install the library by running the following command:
 ```
 pip3 install .
 ```
@@ -767,7 +767,7 @@ ____
 ## Interface
 
 Interface is a special module which can be used for creating low-level sockets and automatically requiring address information from the specified interface. Below an example from an use case.  
-**Requires SUDO rights!**
+**Requires `sudo` rights!**
 
 ```python
 from packnet import Interface
