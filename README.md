@@ -5,9 +5,9 @@ ____
 
 
 ## Table of Contents
-1. [About](#about)
-1. [OSI model](#osi-model)
-1. [Protocols](#protocols)
+* [About](#about)
+* [OSI model](#osi-model)
+* [Protocols](#protocols)
   * Layer 2
     1. [Ethernet](#ethernet-protocol)
   * Layer 3
@@ -22,20 +22,20 @@ ____
   * Layer 7
     1. [DNS](#dns-protocol)
     1. [MQTT](#mqtt-protocol)
-1. [Installation](#installation)
+* [Installation](#installation)
   1. [PyPi](#installation-from-pypi)
   1. [GitHub](#installation-from-github)
-1. [Importing packnet](#import)
-1. [Building packets](#building)
+* [Importing packnet](#import)
+* [Building packets](#building)
   1. [ARP request](#arp-request-encode)
   1. [TCP message](#tcp-message-encode)
   1. [UDP message](#udp-message-encode)
   1. [DNS query](#dns-query-encode)
-1. [Reading packets](#reading)
+* [Reading packets](#reading)
   1. [ARP](#arp-decode)
   1. [TCP](#tcp-decode)
   1. [DNS](#dns-decode)
-1. [Interface](#interface)
+* [Interface](#interface)
 
 
 ____
