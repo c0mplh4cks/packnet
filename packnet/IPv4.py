@@ -44,10 +44,11 @@ class Header:
 
         self.src = ["", 0, ""]
         self.dst = ["", 0, ""]
+        self.version = 4
+        self.headerlen = 20
         self.protocol = 17
         self.id = 0
         self.dscp = 0
-        self.vhl = 69
         self.flags = 0b010
         self.ttl = 64
         self.length = 0
@@ -59,9 +60,10 @@ class Header:
     def build(self):
         packet = []
 
+        vhl = (self.version << 4) + (self.headerlen // 4)
         self.length = 20 + len(self.data)
 
-        packet.insert(0, pack( ">B", self.vhl ))            # Version & Header length
+        packet.insert(0, pack( ">B", vhl ))                 # Version & Header length
         packet.insert(1, pack( ">B", self.dscp ))           # Differentiated services field
         packet.insert(2, pack( ">H", self.length ))         # Total length
         packet.insert(3, pack( ">H", self.id ))             # Identification
@@ -83,7 +85,7 @@ class Header:
         packet = self.packet
         i = 0
 
-        i, self.vhl         = i+1, packet[i]                                # Version & Header length
+        i, vhl              = i+1, packet[i]                                # Version & Header length
         i, self.dscp        = i+1, packet[i]                                # Differentiated services field
         i, length           = i+2, unpack( ">H", packet[i:i+2] )[0]         # Total length
         i, self.id          = i+2, unpack( ">H", packet[i:i+2] )[0]         # Identification
@@ -94,6 +96,9 @@ class Header:
         i, self.src[0]      = i+4, decode.ip( packet[i:i+4] )               # Source IP
         i, self.dst[0]      = i+4, decode.ip( packet[i:i+4] )               # Target IP
         i, self.data        = i+len( packet[i:] ), packet[i:]               # Data
+
+        self.version = vhl >> 4
+        self.headerlen = (vhl - (self.version << 4)) * 4
 
         self.length = i
 
