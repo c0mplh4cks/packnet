@@ -75,7 +75,7 @@ class Header:
         packet.insert(1, pack( ">H", self.dst[1] ))     # Target PORT
         packet.insert(2, pack( ">L", self.seq ))        # Sequence number
         packet.insert(3, pack( ">L", self.ack ))        # Acknowledgement number
-        packet.insert(4, pack( ">H", self.flags ))      # Flags
+        packet.insert(4, pack( ">H", self.flags ))      # Flags & Header length
         packet.insert(5, pack( ">H", self.win ))        # Window size
         packet.insert(7, pack( ">H", self.urg ))        # Urgent pointer
 
