@@ -190,8 +190,8 @@ class ConnectACK:
 
 
 
-# === SubscribeREQ === #
-class SubscribeREQ:
+# === Subscribe === #
+class Subscribe:
     def __init__(self, packet=b""):
         self.packet = packet
 
