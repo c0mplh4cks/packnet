@@ -44,7 +44,7 @@ class Header:
 
         self.src = ["", 0, ""]
         self.dst = ["", 0, ""]
-        self.version = 0b0110
+        self.version = 6
         self.traffic = 0b00000000
         self.flowlabel = 0b00010111010011101110
         self.nextheader = 58
