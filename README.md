@@ -4,8 +4,15 @@
 ____
 
 
+## About
+
+This package is created to build low-level networking packets which can be used when building various types of applications. Using this package, it is possible to make packets ranging from OSI model level 2 to level 7. One of the endless applications could be a network device discovery tool using the address resolution protocol for example. Apart from only building numerous headers and payloads, this package makes it also possible to read received data and extract usefull information, making it possible to interact with a Python script.
+
+
+____
+
+
 ## Table of Contents
-* [About](#about)
 * [OSI model](#osi-model)
 * [Protocols](#protocols)
   * Layer 2
@@ -36,15 +43,6 @@ ____
   1. [TCP](#tcp-decode)
   1. [DNS](#dns-decode)
 * [Interface](#interface)
-
-
-____
-
-
-
-## About
-
-This package is created to build low-level networking packets which can be used when building various types of applications. Using this package, it is possible to make packets ranging from OSI model level 2 to level 7. One of the endless applications could be a network device discovery tool using the address resolution protocol for example. Apart from only building numerous headers and payloads, this package makes it also possible to read received data and extract usefull information, making it possible to interact with a Python script.
 
 
 ____
