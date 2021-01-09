@@ -24,7 +24,7 @@ from .vendor import vendors
 
 # === Get Public IP === #
 def getpublicip():
-    return subprocess.run( ["curl", "ifconfig.me"] ).stdout
+    return subprocess.run(["curl", "ifconfig.me"], capture_output=True, text=True).stdout
 
 
 
