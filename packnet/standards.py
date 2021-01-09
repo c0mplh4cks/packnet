@@ -12,10 +12,19 @@
 
 
 # === Importing Dependencies === #
+import subprocess
 from struct import pack, unpack
 from .vendor import vendors
 
 
+
+
+
+
+
+# === Get Public IP === #
+def getpublicip():
+    return subprocess.run( ["curl", "ifconfig.me"] ).stdout
 
 
 
