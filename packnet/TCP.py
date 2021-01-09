@@ -141,6 +141,8 @@ class Option:
         self.timestamp = 0
         self.timereply = 0
         self.scale = 0
+        self.leftedge = 0
+        self.rightedge = 0
         self.data = b""
 
 
@@ -160,12 +162,18 @@ class Option:
             self.length = len(b"".join(packet)) + 1
             packet.insert(1, pack( ">B", self.length ))
 
-        elif self.kind == 4:                                # SACK (Selective ACKnowledgement)
+        elif self.kind == 4:                                # SACK (Selective ACKnowledgement) permitted
             self.length = 2
             packet.insert(1, pack( ">B", self.length ))
 
+        elif self.kind == 5:                                # SACK (Selective ACKnowledgement)
+            self.length = 10
+            packet.insert(1, pack( ">B", self.length ))
+            packet.insert(2, pack( ">L", self.leftedge ))
+            packet.insert(3, pack( ">L", self.rightedge ))
+
         elif self.kind == 8:                                # Timestamps
-            self.length = 4
+            self.length = 10
             packet.insert(1, pack( ">B", self.length ))
             packet.insert(2, pack( ">L", self.timestamp ))
             packet.insert(3, pack( ">L", self.timereply ))
@@ -190,13 +198,19 @@ class Option:
             i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
             i, self.scale = i+(self.length-2), decode.toint( packet[i:i+(self.length-2)] )
 
-        elif self.kind == 4:                                            # SACK (Selective ACKnowledgement)
+        elif self.kind == 4:                                            # SACK (Selective ACKnowledgement) permitted
             i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
             i, self.data = i+(self.length-2), packet[i:i+(self.length-2)]
 
+        elif self.kind == 5:                                            # SACK (Selective ACKnowledgement)
+            i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
+            i, self.leftedge = i+4, unpack( ">L", packet[i:i+4] )[0]
+            i, self.rightedge = i+4, unpack( ">L", packet[i:i+4] )[0]
+
         elif self.kind == 8:                                            # Timestamps
             i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.data = i+(self.length-2), packet[i:i+(self.length-2)]
+            i, self.timestamp = i+4, unpack( ">L", packet[i:i+4] )[0]
+            i, self.timereply = i+4, unpack( ">L", packet[i:i+4] )[0]
 
         self.length = i
 
