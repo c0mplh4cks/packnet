@@ -1,5 +1,5 @@
 from .vendor import *
-from .standards import encode, decode, checksum, maclookup
+from .standards import encode, decode, checksum, maclookup, getpublicip
 from .interface import Interface
 
 # Layer 2

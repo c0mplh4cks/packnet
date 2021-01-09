@@ -93,6 +93,12 @@
 
 ### v2.0.2
 
-  * **[+]** Added `getpublicip` function to `standards`
+  * **[+]** Added `getpublicip` function to standards
   * **[~]** Changed table of contents, minor changes for readability and moved about section in `README.md`
-  * **[~]** Changed the reading of options in `TCP` (Must be improved in future)
+  * **[~]** Changed the reading of options in TCP (Must be improved in future)
+
+
+### v2.0.3
+
+  * **[~]** Numerous fixes to the options in the TCP protocol module
+  * **[~]** Changed how the ip gets returned in the `getpublicip` function in the `standards` module
