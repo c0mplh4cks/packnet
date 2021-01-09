@@ -196,8 +196,7 @@ class Option:
 
         elif self.kind == 8:                                            # Timestamps
             i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.timestamp = i+4, unpack( ">L", packet[i:i+4] )[0]
-            i, self.timereply = i+4, unpack( ">L", packet[i:i+4] )[0]
+            i, self.data = i+(self.length-2), packet[i:i+(self.length-2)]
 
         self.length = i
 
