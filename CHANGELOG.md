@@ -89,3 +89,10 @@
   * **[~]** Fixed `__init__.py` by importing every Protocol module
   * **[~]** Removed `vhl` attribute in IPv4 Header and replaced by version and header length
   * **[~]** Changed 0b0110 to 6 in IPv6 Header object for improved readability
+
+
+### v2.0.2
+
+  * **[+]** Added `getpublicip` function to `standards`
+  * **[~]** Changed table of contents, minor changes for readability and moved about section in `README.md`
+  * **[~]** Changed the reading of options in `TCP` (Must be improved in future)
