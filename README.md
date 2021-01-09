@@ -6,7 +6,7 @@ ____
 
 ## About
 
-This package is created to build low-level networking packets which can be used when building various types of applications. Using this package, it is possible to make packets ranging from OSI model level 2 to level 7. One of the endless applications could be a network device discovery tool using the address resolution protocol for example. Apart from only building numerous headers and payloads, this package makes it also possible to read received data and extract usefull information, making it possible to interact with a Python script.
+This package is created to build low-level networking packets which can be used when building various types of applications. Using this package, it is possible to make packets ranging from OSI model level 2 to level 7. One of the endless applications could be a network device discovery tool using the address resolution protocol for example. Apart from only building numerous headers and payloads, this package makes it also possible to read received data and extract useful information, making it possible to interact with a Python script.
 
 
 ____
@@ -64,7 +64,7 @@ No | Layer        | Function                    | Protocol *(included in package
 1  | Physical     | Bits                        |
 
 
-Introduced to standardise networking protocols, allowing multiple networking devices from different developers to communicate among each other. The model consists of multiple layers with its own functions. The OSI model differs from the TCP/IP model since it has the presentation and session layers.
+Introduced to standardize networking protocols, allowing multiple networking devices from different developers to communicate among each other. The model consists of multiple layers with its own functions. The OSI model differs from the TCP/IP model since it has the presentation and session layers.
 
 
 ____
@@ -248,7 +248,7 @@ TCP makes part of the transport layer.
   16   | 2     | Source PORT                  | int  | source port
   16   | 2     | Destination PORT             | int  | destination port
   32   | 4     | Sequence number              | int  | sequence number
-  32   | 4     | Acknowledgement number       | int  | acknowledgement number
+  32   | 4     | Acknowledgement number       | int  | acknowledgment number
   4    | -     | Header length                | int  | length of header
   12   | -     | Flags                        | int  | flags
   16   | 2     | Window size                  | int  | size of window
@@ -488,7 +488,7 @@ tcp = TCP.Header()    # defining TCP Header object
 tcp.src = src         # setting source address
 tcp.dst = dst         # setting destination address
 tcp.seq = 1234        # setting sequence number
-tcp.ack = 4321        # setting acknowledgement number
+tcp.ack = 4321        # setting acknowledgment number
 tcp.data = msg        # setting payload
 tcp.build()           # building TCP Header
 
