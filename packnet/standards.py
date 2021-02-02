@@ -12,7 +12,7 @@
 
 
 # === Importing Dependencies === #
-import subprocess
+from socket import socket, AF_INET, SOCK_STREAM
 from struct import pack, unpack
 from .vendor import vendors
 
@@ -24,7 +24,12 @@ from .vendor import vendors
 
 # === Get Public IP === #
 def getpublicip():
-    return subprocess.run(["curl", "ifconfig.me"], capture_output=True, text=True).stdout
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect(("ifconfig.me", 80))
+    s.send( b"GET http://ifconfig.me HTTP/1.1\r\n\r\n" )
+    data = s.recv(1024).decode()
+
+    return data.split("\r\n\r\n")[1]
 
 
 
@@ -121,12 +126,14 @@ class decode:
             length = name[i]
 
             if length == 0:
+                i += 1
                 break
 
             elif (length >> 6) == 3:
                 pointer = unpack(">H", name[i:i+2] )[0] -49152
                 i += 2
-                name = name[:i] + header[pointer:] + name[i:]
+                labels.append( decode.name( header[pointer:], header )[1] )
+                break
 
             else:
                 i += 1
@@ -135,7 +142,7 @@ class decode:
 
         name = ".".join( labels )
 
-        return i+ti+1, name
+        return i+ti, name
 
 
 
