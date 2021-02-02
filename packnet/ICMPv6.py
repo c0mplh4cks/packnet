@@ -45,6 +45,7 @@ class Header:
         self.type = 0
         self.code = 0
         self.checksum = 0
+        self.protocol = None
         self.length = 0
         self.data = b""
 

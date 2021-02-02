@@ -53,6 +53,7 @@ class Header:
         self.length = 0
         self.checksum = 0
         self.options = []
+        self.protocol = [ self.src[1], self.dst[1] ]
         self.data = b""
 
 
@@ -90,6 +91,8 @@ class Header:
         packet.insert(8, options)                       # Options
         packet.insert(9, self.data )                    # Data
 
+        self.protocol = [ self.src[1], self.dst[1] ]
+
         self.packet = b"".join(packet)
 
         return self.packet
@@ -119,6 +122,8 @@ class Header:
             self.options.append(option)
 
         i, self.data = i+len( packet[i:] ), packet[i:]                   # Data
+
+        self.protocol = [ self.src[1], self.dst[1] ]
 
         self.length = i
 

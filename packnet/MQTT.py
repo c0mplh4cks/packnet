@@ -44,6 +44,7 @@ class Header:
 
         self.type = 0
         self.flags = 0b0000
+        self.protocol = None
         self.length = 0
         self.payloadlen = 0
         self.data = b""

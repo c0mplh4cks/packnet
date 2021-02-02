@@ -46,6 +46,7 @@ class Header:
         self.dst = ["", 0, ""]
         self.length = 0
         self.checksum = 0
+        self.protocol = [ self.src[1], self.dst[1] ]
         self.data = b""
 
 
@@ -67,6 +68,8 @@ class Header:
             pack( ">H", self.length )
         ] ))
 
+        self.protocol = [ self.src[1], self.dst[1] ]
+
         self.packet = b"".join(packet)
 
         return self.packet
@@ -82,6 +85,8 @@ class Header:
         i, length           = i+2, unpack( ">H", packet[i:i+2] )[0]     # Total length
         i, self.checksum    = i+2, unpack( ">H", packet[i:i+2] )[0]     # Checksum
         i, self.data        = i+len( packet[i:] ), packet[i:]           # Data
+
+        self.protocol = [ self.src[1], self.dst[1] ]
 
         self.length = i
 

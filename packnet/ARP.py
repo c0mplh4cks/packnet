@@ -46,10 +46,12 @@ class Header:
         self.dst = ["", 0, ""]
         self.op = 1
         self.ht = 1
-        self.pt = 2048
+        self.pt = 0x0800
         self.hs = 6
         self.ps = 4
+        self.protocol = None
         self.length = 0
+        self.data = b""
 
 
 
