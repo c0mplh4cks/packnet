@@ -14,35 +14,24 @@ ____
 
 ## Table of Contents
 * [OSI model](#osi-model)
-* [Protocols](#protocols)
-  * Layer 2
-    1. [Ethernet](#ethernet-protocol)
-  * Layer 3
-    1. [ARP](#arp-protocol)
-    1. [IPv4](#ipv4-protocol)
-    1. [IPv6 ](#ipv6-protocol)
-    1. [ICMP](#icmp-protocol)
-    1. [ICMPv6](#icmpv6-protocol)
-  * Layer 4
-    1. [UDP](#udp-protocol)
-    1. [TCP](#tcp-protocol)
-  * Layer 7
-    1. [DNS](#dns-protocol)
-    1. [MQTT](#mqtt-protocol)
 * [Installation](#installation)
   1. [PyPi](#installation-from-pypi)
-  1. [GitHub](#installation-from-github)
+  2. [GitHub](#installation-from-github)
 * [Importing packnet](#import)
 * [Building packets](#building)
   1. [ARP request](#arp-request-encode)
-  1. [TCP message](#tcp-message-encode)
-  1. [UDP message](#udp-message-encode)
-  1. [DNS query](#dns-query-encode)
+  2. [TCP message](#tcp-message-encode)
+  3. [UDP message](#udp-message-encode)
+  4. [DNS query](#dns-query-encode)
 * [Reading packets](#reading)
   1. [ARP](#arp-decode)
-  1. [TCP](#tcp-decode)
-  1. [DNS](#dns-decode)
+  2. [TCP](#tcp-decode)
+  3. [DNS](#dns-decode)
+* [RAW Header](#raw-header)
 * [Interface](#interface)
+* [Packager](#packager)
+  1. [Reading packets](#reading-packets-using-packager)
+  2. [Building packets](#building-packets-using-packager)
 
 
 ____
@@ -64,302 +53,7 @@ No | Layer        | Function                    | Protocol *(included in package
 1  | Physical     | Bits                        |
 
 
-Introduced to standardize networking protocols, allowing multiple networking devices from different developers to communicate among each other. The model consists of multiple layers with its own functions. The OSI model differs from the TCP/IP model since it has the presentation and session layers.
-
-
-____
-
-
-## Protocols
-
-An explanation of the datagrams for each protocol included in this package. Every protocol described here contains a table with the contents of the protocols datagram in order. The tables contain the length of the data in bits and bytes, a description and a type field. The type field explains in which type the data must be set when used in Python.
-
-
-____
-
-
-### Ethernet protocol
-
-Ethernet makes part of the data link layer.
-
-* #### Header
-
-  Bits | Bytes | Data                    | Type | Description
-  -----|-------|-------------------------|------|------------
-  48   | 6     | Destination MAC Address | str  | destination MAC address
-  48   | 6     | Source MAC Address      | str  | source MAC address
-  16   | 2     | Protocol                | int  | each layer 3 packet has its own protocol value
-
-
-____
-
-
-### ARP protocol
-
-ARP makes part of the network layer.
-
-* #### Header
-
-  Bits | Bytes | Data                    | Type | Description
-  -----|-------|-------------------------|------|------------
-  16   | 2     | Hardware Type           | int  | type of hardware address
-  16   | 2     | Protocol Type           | int  | type of protocol address
-  8    | 1     | Hardware Size           | int  | size of hardware address
-  8    | 1     | Protocol Size           | int  | size of protocol address
-  16   | 2     | Operation Code          | int  | 1 for request, 2 for response
-  48   | 6     | Source MAC Address      | str  | source MAC address
-  32   | 4     | Source IP Address       | str  | source IP address
-  48   | 6     | Destination MAC Address | str  | destination MAC address
-  32   | 4     | Destination IP Address  | str  | destination IP address
-
-
-____
-
-
-### IPv4 protocol
-
-IPv4 makes part of the network layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  4    | -     | Version                      | int  | version of IP
-  4    | -     | Header length                | int  | length of ipv4 header
-  8    | 1     | Differentiated Service Field | int  | differentiated service field
-  16   | 2     | Total length                 | int  | total length of packet
-  16   | 2     | ID                           | int  | identifier for IPv4 packet
-  16   | 2     | Flags                        | int  | flags
-  8    | 1     | TTL                          | int  | time to live
-  8    | 1     | Protocol                     | int  | protocol of following header
-  16   | 2     | Checksum                     | int  | for calculating errors
-  32   | 4     | Source IP Address            | str  | source IP address
-  32   | 4     | Destination IP Address       | str  | destination IP address
-
-
-____
-
-
-### IPv6 protocol
-
-IPv6 makes part of the network layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  4    | -     | Version                      | int  | version of IP
-  8    | 1     | Traffic class                | int  | traffic class
-  20   | -     | Flow label                   | int  | flow label
-  16   | 2     | Payload length               | int  | length of payload
-  8    | 1     | Next header                  | int  | type identifier of next header
-  8    | 1     | Hop limit                    | int  | hop limit
-  126  | 16    | Source IPv6 Address          | str  | source IPv6 address
-  126  | 16    | Destination IPv6 Address     | str  | destination IPv6 address
-
-
-____
-
-
-### ICMP protocol
-
-ICMP makes part of the network layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  8    | 1     | Type                         | int  | type
-  8    | 1     | Code                         | int  | subtype
-  16   | 2     | Checksum                     | -    | for calculating errors
-
-
-* #### Echo
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | ID                           | int  | echo identifier
-  16   | 2     | Sequence Number              | int  | sequence number
-  64   | 8     | Timestamp                    | int  | timestamp
-  \>0  | >0    | Payload                      | bstr | payload (variable size)
-
-
-* #### TimeExceeded
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  32   | 4     | Unused                       | -    | unused
-  \>160| >20  | Data                         | bstr | IPv4 Header & ICMP Header
-
-
-____
-
-
-### ICMPv6 protocol
-
-ICMPv6 makes part of the network layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  8    | 1     | Type                         | int  | type
-  8    | 1     | Code                         | int  | subtype
-  16   | 2     | Checksum                     | int  | for calculating errors
-
-
-* #### Echo
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | ID                           | int  | echo identifier
-  16   | 2     | Sequence Number              | int  | sequence number
-  \>0  | >0    | Payload                      | bstr | payload (variable size)
-
-
-____
-
-
-### UDP protocol
-
-UDP makes part of the transport layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | Source PORT                  | int  | source port
-  16   | 2     | Destination PORT             | int  | destination port
-  16   | 2     | Total length                 | int  | total length of header & payload
-  16   | 2     | Checksum                     | -    | for calculating errors
-
-
-____
-
-
-### TCP protocol
-
-TCP makes part of the transport layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | Source PORT                  | int  | source port
-  16   | 2     | Destination PORT             | int  | destination port
-  32   | 4     | Sequence number              | int  | sequence number
-  32   | 4     | Acknowledgement number       | int  | acknowledgment number
-  4    | -     | Header length                | int  | length of header
-  12   | -     | Flags                        | int  | flags
-  16   | 2     | Window size                  | int  | size of window
-  16   | 2     | Checksum                     | int  | for calculating errors
-  16   | 2     | Urgent pointer               | int  | urgent pointer
-  \>0  | >0    | Options                      | obj  | options
-
-
-____
-
-
-### DNS protocol
-
-DNS makes part of the application layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | ID                           | int  | echo identifier
-  16   | 2     | Flags                        | int  | flags
-  16   | 2     | Questions                    | int  | amount of questions
-  16   | 2     | Answer RRs                   | int  | amount of answer RRs
-  16   | 2     | Authority RRs                | int  | amount of authority RRs
-  16   | 2     | Additional RRs               | int  | amount of additional RRs
-
-
-* #### Query
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  \>8  | >1    | Name                         | str  | name in question
-  16   | 2     | Type                         | int  | name type
-  16   | 2     | Class                        | int  | name class
-
-
-* #### Answer
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  \>8  | >1    | Name                         | str  | name in question
-  16   | 2     | Type                         | int  | cname type
-  16   | 2     | Class                        | int  | cname class
-  32   | 4     | Time To Live                 | int  | time to live for answer
-  16   | 2     | Length                       | int  | total length of answer
-  \>8  | >1    | Cname                        | str  | answer on question
-
-
-____
-
-
-### MQTT protocol
-
-MQTT makes part of the application layer.
-
-* #### Header
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  8    | 1     | Flags                        | int  | flags
-  8    | 1     | Payload length               | int  | length of payload
-
-
-* #### Connect
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | Protocol length              | int  | length of protocol
-  \>0  | >0    | Protocol                     | str  | protocol
-  8    | 1     | Version                      | int  | version
-  8    | 1     | Flags                        | int  | flags
-  16   | 2     | Keep alive                   | int  | keep alive
-  16   | 2     | ID length                    | int  | length of identifier
-  \>0  | >0    | ID                           | str  | identifier
-
-
-* #### ConnectACK
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  8    | 1     | Flags                        | int  | flags  
-  8    | 1     | Return code                  | int  | return code
-
-
-* #### Subscribe
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | Message ID                   | int  | identifier of message
-  16   | 2     | Topic length                 | int  | length of topic
-  \>0  | >0    | Topic                        | str  | topic
-  8    | 1     | Requested QoS                | int  | requested type of QoS
-
-
-* #### SubscribeACK
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | Message ID                   | int  | identifier of message
-  8    | 1     | Granted QoS                  | int  | granted type of QoS
-
-
-* #### Publish
-
-  Bits | Bytes | Data                         | Type | Description
-  -----|-------|------------------------------|------|------------
-  16   | 2     | Topic length                 | int  | length of topic
-  \>0  | >0    | Topic                        | str  | topic
-  \>0  | >0    | Message                      | str  | message
-
-
+Introduced to standardize networking protocols, allowing multiple networking devices from different developers to communicate among each other. The model consists of multiple layers with its own unique function. The OSI model differs from the TCP/IP model since it contains the presentation and session layers.
 
 
 ____
@@ -397,6 +91,10 @@ cd packnet
 Install the library by running the following command:
 ```
 pip3 install .
+```
+or
+```
+pip install .
 ```
 
 
@@ -762,9 +460,18 @@ if ethernet.protocol == 0x0800:     # check if packet contains an IPv4 Header
 ____
 
 
+## RAW Header
+
+The RAW module is a special module created for a specific but simple reason. It contains raw data which is not decodable by the currently implemented protocols. `RAW.Header` can be used in the same way as the other protocols since it contains the `build` and `read` functions. The only two attributes which are usefull for implementations, are the `data` and `length` attributes. The `data` attribute contains the undecodable data in bytes. The `length` attribute contains the length of the data in bytes.
+
+
+
+____
+
+
 ## Interface
 
-Interface is a special module which can be used for creating low-level sockets and automatically requiring address information from the specified interface. Below an example from an use case.  
+Interface is a special module which can be used for creating low-level sockets and automatically requiring address information from the specified interface. Below an example for a use case.  
 **Requires `sudo` rights!**
 
 ```python
@@ -777,4 +484,63 @@ print(interface.addr)
 
 interface.send(b"hello")
 print(interface.recv())
+```
+
+It is alse possible to require a MAC address from a device using the following function:
+
+```python
+import packnet
+
+interface = packnet.Interface()
+ip, port, mac = interface.getmac("192.168.1.1")
+
+print(mac)
+```
+
+
+____
+
+
+## Packager
+
+The Packager module automates the process of building and reading networking packets.
+
+
+### Reading packets using Packager
+
+The following example shows how it is possible to use the Packager class to automatically analyse the different layers of the incoming packet. The example parses the incoming packet into a Packager object and filtering to finally display the requested name of the DNS query.
+
+```python
+import packnet
+
+interface = packnet.Interface()
+
+while True:
+  packet, info = interface.recv()
+
+  package = packnet.Packager(packet)
+  package.read()
+
+  # Filtering for DNS Queries
+  if len( package.layer ) < 4: continue
+  if type( package.layer[3] ) != packnet.DNS.Header: continue
+  if len( package.layer[3].answer ) != 0: continue
+  if len( package.layer[3].question ) != 0: continue
+  if package.layer[3].question[0].type != 1: continue
+
+  print( package.layer[3].question[0].name )
+```
+
+
+### Building packets using Packager
+
+The following snippet of code describes how Packager automatically completes the required underlying protocols.
+
+```python
+import packnet
+
+package = packnet.Packager()
+package.build( packnet.UDP.Header )   # building a UDP packet
+
+print( package.layer )  # the printed list contains objects for every required protocol
 ```

@@ -102,3 +102,17 @@
 
   * **[~]** Numerous fixes to the options in the TCP protocol module
   * **[~]** Changed how the ip gets returned in the `getpublicip` function in the `standards` module
+
+
+### v2.1.0
+
+  * **[+]** Added `protocol` attribute to every protocol
+  * **[+]** Added Packager module for automated interpreting and building networking packets
+  * **[+]** Added `RAW` module for raw undecodable data
+  * **[+]** Added AAAA types to DNS module
+  * **[+]** Added `getmac` function to interface module for requiring MAC addresses using ARP
+  * **[~]** Changed how the `getpublicip` function required the public ip by using sockets
+  * **[~]** Fixed pointer bugs in `standards.decode.name` function
+  * **[~]** Fixed DNS flags bug
+  * **[~]** Fixed DNS Answer length mistake
+  * **[~]** Fixed automatic card binder in the interface module
