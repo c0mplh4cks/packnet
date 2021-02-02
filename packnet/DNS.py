@@ -43,11 +43,12 @@ class Header:
         self.packet = packet
 
         self.id = 0
-        self.flags = 0b000000100
+        self.flags = 0b0000000100000000
         self.question = []
         self.answer = []
         self.authority = []
         self.additional = []
+        self.protocol = None
         self.length = 0
         self.data = b""
 
@@ -56,6 +57,7 @@ class Header:
     def build(self):
         packet = []
 
+        self.data = b""
         for section in (self.question, self.answer, self.authority, self.additional):
             for record in section:
                 record.build()
@@ -64,7 +66,7 @@ class Header:
         self.length = 12 + len(self.data)
 
         packet.insert(0, pack( ">H", self.id ))                 # Transaction ID
-        packet.insert(1, pack( ">H", self.flags << 4 ))         # Flags
+        packet.insert(1, pack( ">H", self.flags ))              # Flags
         packet.insert(2, pack( ">H", len(self.question) ))      # Questions
         packet.insert(3, pack( ">H", len(self.answer) ))        # Answer RRs
         packet.insert(4, pack( ">H", len(self.authority) ))     # Authority RRs
@@ -82,7 +84,7 @@ class Header:
         i = 0
 
         i, self.id      = i+2, unpack( ">H", packet[i:i+2] )[0]         # Transaction ID
-        i, self.flags   = i+2, unpack( ">H", packet[i:i+2] )[0] >> 4    # Flags
+        i, self.flags   = i+2, unpack( ">H", packet[i:i+2] )[0]         # Flags
         i, questions    = i+2, unpack( ">H", packet[i:i+2] )[0]         # Questions
         i, answers      = i+2, unpack( ">H", packet[i:i+2] )[0]         # Answer RRs
         i, authoritys   = i+2, unpack( ">H", packet[i:i+2] )[0]         # Authority RRs
@@ -116,7 +118,7 @@ class Query:
         self.header = header
 
         self.name = ""
-        self.type = 5
+        self.type = 1
         self.classif = 1
         self.length = 0
 
@@ -169,25 +171,29 @@ class Answer:
         self.ttl = 64
         self.cname = ""
         self.length = 0
+        self.datalength = 0
 
 
 
     def build(self):
         packet = []
 
-        name = encode.name( self.name, self.header)
+        name = encode.name( self.name, self.header )
         if self.type == 1:
             cname = encode.ip( self.cname )
+        if self.type == 28:
+            cname = encode.ipv6( self.cname )
         elif self.type != 1:
             cname = encode.name( self.cname, self.header)
 
         self.length = 10 + len(name) + len(cname)
+        self.datalength = len(cname)
 
         packet.insert(0, name)                          # Name
         packet.insert(1, pack( ">H", self.type ))       # Type
         packet.insert(2, pack( ">H", self.classif ))    # Class
         packet.insert(3, pack( ">L", self.ttl ))        # Time to live
-        packet.insert(4, pack( ">H", self.length ))     # Total Length
+        packet.insert(4, pack( ">H", self.datalength )) # Data Length
         packet.insert(5, cname)                         # Cname
 
         self.packet = b"".join(packet)
@@ -200,16 +206,18 @@ class Answer:
         packet = self.packet
         i = 0
 
-        i, self.name    = decode.name( packet[i:], self.header, i )     # Name
-        i, self.type    = i+2, unpack( ">H", packet[i:i+2] )[0]         # Type
-        i, self.classif = i+2, unpack( ">H", packet[i:i+2] )[0]         # Class
-        i, self.ttl     = i+4, unpack( ">L", packet[i:i+4] )[0]         # Time to live
-        i, length       = i+2, unpack( ">H", packet[i:i+2] )[0]         # Total Length
+        i, self.name        = decode.name( packet[i:], self.header, i )     # Name
+        i, self.type        = i+2, unpack( ">H", packet[i:i+2] )[0]         # Type
+        i, self.classif     = i+2, unpack( ">H", packet[i:i+2] )[0]         # Class
+        i, self.ttl         = i+4, unpack( ">L", packet[i:i+4] )[0]         # Time to live
+        i, self.datalength  = i+2, unpack( ">H", packet[i:i+2] )[0]         # Data Length
 
-        if self.type == 1:                                              # Cname
+        if self.type == 1:                                                  # Cname
             i, self.cname = i+4, decode.ip( packet[i:] )
+        elif self.type == 28:
+            i, self.cname = i+16, decode.ipv6( packet[i:] )
         elif self.type != 1:
-            i, self.cname   = decode.name( packet[i:], self.header, i )
+            i, self.cname = decode.name( packet[i:], self.header, i )
 
         self.length = i
 
