@@ -93,6 +93,7 @@ class Packager():
 
     def read(self, next=ETHERNET.Header):
         packet = self.packet
+        self.layer = []
 
         while True:
             current = next
@@ -110,21 +111,36 @@ class Packager():
 
 
 
-    def build(self, protocol):
+    def fill(self, protocol, src=None, dst=None):
         if type( protocol ) == RAW.Header: return None
+        self.layer = []
 
-        layer = []
         while True:
-            layer.insert( 0, protocol() )
+            self.layer.insert( 0, protocol() )
             protocol = self.rtree[protocol]
             if not protocol: break
 
-        layer.append( RAW.Header() )
+        self.layer.append( RAW.Header() )
 
-        for i in range( len(layer)-2 ):
-            next = self.rcheckprotocol( type(layer[i]), type(layer[i+1]) )
-            layer[i].protocol = next
+        for i in range( len(self.layer)-2 ):
+            next = self.rcheckprotocol( type(self.layer[i]), type(self.layer[i+1]) )
+            self.layer[i].protocol = next
 
-        self.layer = layer
+        for p in self.layer:
+            if hasattr(p, "src") and src:
+                p.src = src
+            if hasattr(p, "dst") and dst:
+                p.dst = dst
 
         return len(self.layer)
+
+
+
+    def build(self):
+        for i in range( 0, len(self.layer) )[::-1]:
+            self.layer[i].build()
+            self.layer[i-1].data = self.layer[i].packet
+
+        self.packet = self.layer[0].packet
+
+        return len(self.packet)
