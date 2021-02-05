@@ -63,20 +63,16 @@ class Interface():
     def getmac(self, ip):
         if self.passive: return None
 
-        arp = ARP.Header()
-        arp.op = 1
-        arp.src = self.addr
-        arp.dst = [ip, 0, "00:00:00:00:00:00"]
-        arp.build()
+        src = self.addr
+        dst = [ip, 0, "ff:ff:ff:ff:ff:ff"]
 
-        ethernet = ETHERNET.Header()
-        ethernet.protocol = 0x0806
-        ethernet.src = self.addr
-        ethernet.dst = ["", 0, "ff:ff:ff:ff:ff:ff"]
-        ethernet.data = arp.packet
-        ethernet.build()
+        package = Packager()
+        package.fill( ARP.Header, src, dst )
+        package.layer[1].op = 1
+        package.build()
 
-        self.send( ethernet.packet )
+        self.send( package.packet )
+
 
         start = time()
         while ( time()-start < self.timeout ):
