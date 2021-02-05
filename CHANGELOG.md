@@ -116,3 +116,11 @@
   * **[~]** Fixed DNS flags bug
   * **[~]** Fixed DNS Answer length mistake
   * **[~]** Fixed automatic card binder in the interface module
+
+
+### v2.1.1
+
+  * **[~]** Changed method name in `packager` class from `build` to `fill`
+  * **[~]** Changed by adding source and destination arguments to `fill` method from the `packager` module
+  * **[+]** Added `build` method to `packager` class for encoding the contents
+  * **[~]** `getmac` method from the `interface` class now makes use the `Packager` module
