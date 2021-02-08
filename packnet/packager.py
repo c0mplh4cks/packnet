@@ -31,43 +31,15 @@ class Packager():
 
         self.layer = []
 
-        self.tree = {
-            ETHERNET.Header : {
-                0x0800 : IPv4.Header,
-                0x0806 : ARP.Header
-            },
-            ARP.Header : {
-
-            },
-            IPv4.Header : {
-                1 : ICMP.Header,
-                6 : TCP.Header,
-                17 : UDP.Header
-            },
-            ICMP.Header : {
-
-            },
-            TCP.Header : {
-                1883 : MQTT.Header
-            },
-            UDP.Header : {
-                53 : DNS.Header
-            }
-        }
-
-        self.rtree = {
-            DNS.Header : UDP.Header,
-            MQTT.Header : TCP.Header,
-
-            ICMP.Header : IPv4.Header,
-            UDP.Header : IPv4.Header,
-            TCP.Header : IPv4.Header,
-
-            IPv4.Header : ETHERNET.Header,
-            ARP.Header : ETHERNET.Header,
-
-            ETHERNET.Header : None
-        }
+        self.tree = [
+            [ ETHERNET.Header, IPv4.Header, 0x0800 ],
+            [ ETHERNET.Header, ARP.Header, 0x0806 ],
+            [ IPv4.Header, ICMP.Header, 1 ],
+            [ IPv4.Header, UDP.Header, 17 ],
+            [ IPv4.Header, TCP.Header, 6 ],
+            [ UDP.Header, DNS.Header, 53 ],
+            [ TCP.Header, MQTT.Header, 1883 ],
+        ]
 
 
 
@@ -76,18 +48,25 @@ class Packager():
 
         l = protocol.protocol
         l = [l] if type(l) == int else l
+
         for p in list(l):
-            if p in self.tree[ type(protocol) ]:
-                return self.tree[ type(protocol) ][p]
+            for node in self.tree:
+                parent, child, edge = node
+                if type(protocol) == parent and p == edge:
+                    return child
 
         return RAW.Header
 
 
 
-    def rcheckprotocol(self, first, second):
-        d = { value : key for key, value in self.tree[first].items() }
-        if second in d:
-            return d[second]
+    def rcheckprotocol(self, protocol):
+        for node in self.tree:
+            parent, child, edge = node
+
+            if type(protocol) == child:
+                prev = parent()
+                prev.protocol = edge
+                return prev
 
 
 
@@ -113,33 +92,27 @@ class Packager():
 
     def fill(self, protocol, src=None, dst=None):
         if type( protocol ) == RAW.Header: return None
-        self.layer = []
+        self.layer = [RAW.Header()]
 
         while True:
-            self.layer.insert( 0, protocol() )
-            protocol = self.rtree[protocol]
+            self.layer.insert( 0, protocol )
+            protocol = self.rcheckprotocol( protocol )
             if not protocol: break
-
-        self.layer.append( RAW.Header() )
-
-        for i in range( len(self.layer)-2 ):
-            next = self.rcheckprotocol( type(self.layer[i]), type(self.layer[i+1]) )
-            self.layer[i].protocol = next
 
         for p in self.layer:
             if hasattr(p, "src") and src:
-                p.src = src
+                p.src = src.copy()
             if hasattr(p, "dst") and dst:
-                p.dst = dst
+                p.dst = dst.copy()
 
         return len(self.layer)
 
 
 
     def build(self):
-        for i in range( 0, len(self.layer) )[::-1]:
+        for i in range( len(self.layer) )[::-1]:
             self.layer[i].build()
-            self.layer[i-1].data = self.layer[i].packet
+            self.layer[i-1].data += self.layer[i].packet
 
         self.packet = self.layer[0].packet
 
