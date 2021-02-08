@@ -27,11 +27,11 @@ from . import ARP
 
 # === Interface === #
 class Interface():
-    def __init__(self, card=None, port=0, passive=False):
+    def __init__(self, card=None, port=0, passive=False, timeout=64):
         self.passive = passive
-        self.timeout = 1
 
         self.sock = socket.socket( socket.AF_PACKET, socket.SOCK_RAW, socket.htons(0x0003) )
+        self.sock.settimeout(timeout)
 
 
         if not card:
@@ -48,7 +48,7 @@ class Interface():
             self.sock.bind( (self.card, 0) )
             mac = decode.mac( self.sock.getsockname()[4] )
 
-            self.addr = ( ip, port, mac )
+            self.addr = [ ip, port, mac ]
 
 
 
@@ -60,23 +60,27 @@ class Interface():
 
 
 
-    def getmac(self, ip):
+    def getmac(self, ip, timeout=3):
         if self.passive: return None
 
         src = self.addr
         dst = [ip, 0, "ff:ff:ff:ff:ff:ff"]
 
         package = Packager()
-        package.fill( ARP.Header, src, dst )
+        package.fill( ARP.Header(), src, dst )
         package.layer[1].op = 1
         package.build()
 
+        self.sock.settimeout(timeout)
         self.send( package.packet )
 
 
         start = time()
-        while ( time()-start < self.timeout ):
-            packet, info = self.recv()
+        while ( time()-start < timeout ):
+            try:
+                packet, info = self.recv()
+            except socket.timeout:
+                return None
 
             package = Packager(packet)
             package.read()
