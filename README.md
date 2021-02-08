@@ -540,7 +540,7 @@ The following snippet of code describes how Packager automatically completes the
 import packnet
 
 package = packnet.Packager()
-package.build( packnet.UDP.Header )   # building a UDP packet
+package.build( packnet.UDP.Header() )   # building a UDP packet
 
 print( package.layer )  # the printed list contains objects for every required protocol
 ```

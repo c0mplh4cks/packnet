@@ -124,3 +124,10 @@
   * **[~]** Changed by adding source and destination arguments to `fill` method from the `packager` module
   * **[+]** Added `build` method to `packager` class for encoding the contents
   * **[~]** `getmac` method from the `interface` class now makes use the `Packager` module
+
+
+### v2.1.2
+
+  * **[+]** Added `Redirect` class to `ICMP` module
+  * **[~]** Small improvements for `interface` module
+  * **[~]** Improved `packager` module
