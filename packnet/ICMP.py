@@ -168,3 +168,45 @@ class TimeExceeded:
         self.length = i
 
         return i
+
+
+
+
+
+
+
+# === Redirect === #
+class Redirect:
+    def __init__(self, packet=b""):
+        self.packet = packet
+
+        self.gateway = ""
+        self.length = 0
+        self.data = b""
+
+
+
+    def build(self):
+        packet = []
+
+        self.length = 4 + len(self.data)
+
+        packet.insert(0, encode.ip( self.gateway ))     # Gateway address
+        packet.insert(1, self.data )                    # Data
+
+        self.packet = b"".join(packet)
+
+        return self.packet
+
+
+
+    def read(self):
+        packet = self.packet
+        i = 0
+
+        i, unused       = i+4, decode.ip( packet[i:i+4] )     # Gateway address
+        i, self.data    = i+len( packet[i:] ), packet[i:]     # Data
+
+        self.length = i
+
+        return i
