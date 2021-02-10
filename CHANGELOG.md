@@ -131,3 +131,10 @@
   * **[+]** Added `Redirect` class to `ICMP` module
   * **[~]** Small improvements for `interface` module
   * **[~]** Improved `packager` module
+
+
+### v2.1.3
+
+  * **[~]** Moved `Tree` from `Packager` to separate module
+  * **[~]** Changed `Packager` to make use of `Tree` module
+  * **[~]** Fixed `tobyte` function from `standards` module
