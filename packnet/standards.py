@@ -72,8 +72,10 @@ class encode:
 
 
     def tobyte(v):
-        b = bin(v)[:1:-1]
-        return b"".join([ pack(">B", int(b[i:i+8], 2)) for i in range(0, len(b), 8) ][::-1])
+        b = bin(v)[2:]
+        while len(b) % 8 != 0:
+            b = "0" + b
+        return b"".join([ pack(">B", int(b[i:i+8], 2)) for i in range(0, len(b), 8) ])
 
 
     def name(name, header=b""):
