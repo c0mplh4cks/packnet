@@ -12,10 +12,8 @@
 
 
 # === Importing Dependencies === #
+from .tree import Tree
 from . import ETHERNET
-from . import ARP, IPv4, ICMP
-from . import UDP, TCP
-from . import DNS, MQTT
 from . import RAW
 
 
@@ -31,16 +29,6 @@ class Packager():
 
         self.layer = []
 
-        self.tree = [
-            [ ETHERNET.Header, IPv4.Header, 0x0800 ],
-            [ ETHERNET.Header, ARP.Header, 0x0806 ],
-            [ IPv4.Header, ICMP.Header, 1 ],
-            [ IPv4.Header, UDP.Header, 17 ],
-            [ IPv4.Header, TCP.Header, 6 ],
-            [ UDP.Header, DNS.Header, 53 ],
-            [ TCP.Header, MQTT.Header, 1883 ],
-        ]
-
 
 
     def checkprotocol(self, protocol):
@@ -50,23 +38,22 @@ class Packager():
         l = [l] if type(l) == int else l
 
         for p in list(l):
-            for node in self.tree:
-                parent, child, edge = node
-                if type(protocol) == parent and p == edge:
-                    return child
+            child = Tree().get( parent=type(protocol), edge=protocol.protocol )
+            if child: return child
 
         return RAW.Header
 
 
 
     def rcheckprotocol(self, protocol):
-        for node in self.tree:
-            parent, child, edge = node
+        nodes = Tree().getnodes( child=type(protocol) )
+        
+        if nodes:
+            parent, child, edge = nodes[0]
+            result = parent()
+            result.protocol = edge
 
-            if type(protocol) == child:
-                prev = parent()
-                prev.protocol = edge
-                return prev
+            return result
 
 
 
