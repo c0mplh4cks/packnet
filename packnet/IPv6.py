@@ -56,22 +56,22 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         vtf = (self.version << 24) + (self.traffic << 20) + (self.flowlabel)
 
         self.payloadlen = len(self.data)
         self.length = 40 + self.payloadlen
 
-        packet.insert(0, pack( ">L", vtf ))             # Version, Traffic class & Flowlabel
-        packet.insert(1, pack( ">H", self.payloadlen )) # Data length
-        packet.insert(2, pack( ">B", self.nextheader )) # Next header
-        packet.insert(3, pack( ">B", self.hop ))        # Hop limit
-        packet.insert(4, encode.ipv6( self.src[0] ))    # Source IP
-        packet.insert(5, encode.ipv6( self.dst[0] ))    # Target IP
-        packet.insert(6, self.data )                    # Data
+        packet[0] = pack( ">L", vtf )               # Version, Traffic class & Flowlabel
+        packet[1] = pack( ">H", self.payloadlen )   # Data length
+        packet[2] = pack( ">B", self.nextheader )   # Next header
+        packet[3] = pack( ">B", self.hop )          # Hop limit
+        packet[4] = encode.ipv6( self.src[0] )      # Source IP
+        packet[5] = encode.ipv6( self.dst[0] )      # Target IP
+        packet[6] = self.data                       # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

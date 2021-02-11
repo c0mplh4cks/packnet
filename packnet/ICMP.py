@@ -52,16 +52,16 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 4 + len(self.data)
 
-        packet.insert(0, pack( ">B", self.type ))       # Type
-        packet.insert(1, pack( ">B", self.code ))       # Code
-        packet.insert(3, self.data )                    # Data
-        packet.insert(2, checksum( packet ))            # Checksum
+        packet[0] = pack( ">B", self.type )     # Type
+        packet[1] = pack( ">B", self.code )     # Code
+        packet[3] = self.data                   # Data
+        packet[2] = checksum( packet.values() ) # Checksum
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -100,16 +100,16 @@ class Echo:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 12 + len(self.data)
 
-        packet.insert(0, pack( ">H", self.id ))             # Identifier
-        packet.insert(1, pack( ">H", self.seq ))            # Sequence number
-        packet.insert(2, pack( "<Q", self.timestamp ))      # Timestamp
-        packet.insert(3, self.data )                        # Data
+        packet[0] = pack( ">H", self.id )           # Identifier
+        packet[1] = pack( ">H", self.seq )          # Sequence number
+        packet[2] = pack( ">H", self.timestamp )    # Timestamp
+        packet[3] = self.data                       # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -145,14 +145,14 @@ class TimeExceeded:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 4 + len(self.data)
 
-        packet.insert(0, pack( ">L", 0 ))       # Unused
-        packet.insert(1, self.data )            # Data
+        packet[0] = pack( ">L", 0 )     # Unused
+        packet[0] = self.data           # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -187,14 +187,14 @@ class Redirect:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 4 + len(self.data)
 
-        packet.insert(0, encode.ip( self.gateway ))     # Gateway address
-        packet.insert(1, self.data )                    # Data
+        packet[0] = encode.ip( self.gateway )   # Gateway address
+        packet[1] = self.data                   # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

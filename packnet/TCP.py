@@ -59,7 +59,7 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         options = b""
         for option in self.options:
@@ -72,28 +72,26 @@ class Header:
         self.hlength = (20 + len(options)) // 4
         self.flags += self.hlength << 12
 
-        packet.insert(0, pack( ">H", self.src[1] ))     # Source PORT
-        packet.insert(1, pack( ">H", self.dst[1] ))     # Target PORT
-        packet.insert(2, pack( ">L", self.seq ))        # Sequence number
-        packet.insert(3, pack( ">L", self.ack ))        # Acknowledgement number
-        packet.insert(4, pack( ">H", self.flags ))      # Flags & Header length
-        packet.insert(5, pack( ">H", self.win ))        # Window size
-        packet.insert(7, pack( ">H", self.urg ))        # Urgent pointer
-
-        packet.insert(6, checksum( [                    # Checksum
-            *packet,
+        packet[0] = pack( ">H", self.src[1] )   # Source PORT
+        packet[1] = pack( ">H", self.dst[1] )   # Target PORT
+        packet[2] = pack( ">L", self.seq )      # Sequence number
+        packet[3] = pack( ">L", self.ack )      # Acknowledgement number
+        packet[4] = pack( ">H", self.flags )    # Flags & Header length
+        packet[5] = pack( ">H", self.win )      # Window size
+        packet[7] = pack( ">H", self.urg )      # Urgent pointer
+        packet[6] = checksum( [                 # Checksum
+            *packet.values(),
             encode.ip( self.src[0] ),
             encode.ip( self.dst[0] ),
             pack( ">H", 6 ),
-            pack( ">H", self.length )
-        ] ))
-
-        packet.insert(8, options)                       # Options
-        packet.insert(9, self.data )                    # Data
+            pack( ">H", self.length ),
+        ] )
+        packet[8] = options                     # Options
+        packet[9] = self.data                   # Data
 
         self.protocol = [ self.src[1], self.dst[1] ]
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -153,37 +151,37 @@ class Option:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
-        packet.insert(0, pack( ">B", self.kind ))
+        packet[0] = pack( ">B", self.kind )
 
-        if self.kind == 2:                                  # Maximum segment size
-            packet.insert(2, encode.tobyte( self.mss ))
-            self.length = len(b"".join(packet)) + 1
-            packet.insert(1, pack( ">B", self.length ))
+        if self.kind == 2:                          # Maximum segment size
+            packet[2] = encode.tobyte( self.mss )
+            self.length = len(b"".join(packet)) +1
+            packet[1] = pack( ">B", self.length )
 
-        elif self.kind == 3:                                # Window scale
-            packet.insert(2, encode.tobyte( self.scale ))
-            self.length = len(b"".join(packet)) + 1
-            packet.insert(1, pack( ">B", self.length ))
+        elif self.kind == 3:                        # Window scale
+            packet[2] = encode.tobyte( self.scale )
+            self.length = len(b"".join(packet)) +1
+            packet[1] = pack( ">B", self.length )
 
-        elif self.kind == 4:                                # SACK (Selective ACKnowledgement) permitted
+        elif self.kind == 4:                        # SACK (Selective ACKnowledgement) permitted
             self.length = 2
-            packet.insert(1, pack( ">B", self.length ))
+            packet[1] = pack( ">B", self.length )
 
-        elif self.kind == 5:                                # SACK (Selective ACKnowledgement)
+        elif self.kind == 5:                        # SACK (Selective ACKnowledgement)
             self.length = 10
-            packet.insert(1, pack( ">B", self.length ))
-            packet.insert(2, pack( ">L", self.leftedge ))
-            packet.insert(3, pack( ">L", self.rightedge ))
+            packet[1] = pack( ">B", self.length )
+            packet[2] = pack( ">L", self.leftedge )
+            packet[3] = pack( ">L", self.rightedge )
 
-        elif self.kind == 8:                                # Timestamps
+        elif self.kind == 8:                        # Timestamps
             self.length = 10
-            packet.insert(1, pack( ">B", self.length ))
-            packet.insert(2, pack( ">L", self.timestamp ))
-            packet.insert(3, pack( ">L", self.timereply ))
+            packet[1] = pack( ">B", self.length )
+            packet[2] = pack( ">L", self.timestamp )
+            packet[3] = pack( ">L", self.timereply )
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

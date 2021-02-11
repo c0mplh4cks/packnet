@@ -56,21 +56,21 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 28
 
-        packet.insert(0, pack( ">H", self.ht ))         # Hardware type
-        packet.insert(1, pack( ">H", self.pt ))         # Protocol type
-        packet.insert(2, pack( ">B", self.hs ))         # Hardware size
-        packet.insert(3, pack( ">B", self.ps ))         # Protocol size
-        packet.insert(4, pack( ">H", self.op ))         # Operation code
-        packet.insert(5, encode.mac( self.src[2] ))     # Source MAC
-        packet.insert(6, encode.ip( self.src[0] ))      # Source IP
-        packet.insert(7, encode.mac( self.dst[2] ))     # Target MAC
-        packet.insert(8, encode.ip( self.dst[0] ))      # Target IP
+        packet[0] = pack( ">H", self.ht )       # Hardware type
+        packet[1] = pack( ">H", self.pt )       # Protocol type
+        packet[2] = pack( ">B", self.hs )       # Hardware size
+        packet[3] = pack( ">B", self.ps )       # Protocol size
+        packet[4] = pack( ">H", self.op )       # Operation code
+        packet[5] = encode.mac( self.src[2] )   # Source MAC
+        packet[6] = encode.ip( self.src[0] )    # Source IP
+        packet[7] = encode.mac( self.dst[2] )   # Target MAC
+        packet[8] = encode.ip( self.dst[0] )    # Target IP
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

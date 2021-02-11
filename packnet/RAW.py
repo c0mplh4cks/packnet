@@ -34,13 +34,13 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = len(self.data)
 
-        packet.insert(0, self.data)     # Data
+        packet[0] = self.data   # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

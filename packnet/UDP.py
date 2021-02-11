@@ -52,25 +52,25 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 8 + len(self.data)
 
-        packet.insert(0, pack( ">H", self.src[1] ))     # Source PORT
-        packet.insert(1, pack( ">H", self.dst[1] ))     # Target PORT
-        packet.insert(2, pack( ">H", self.length ))     # Total length
-        packet.insert(4, self.data )                    # Data
-        packet.insert(3, checksum( [                    # Checksum
-            *packet,
+        packet[0] = pack( ">H", self.src[1] )   # Source PORT
+        packet[1] = pack( ">H", self.dst[1] )   # Target PORT
+        packet[2] = pack( ">H", self.length )   # Total length
+        packet[4] = self.data                   # Data
+        packet[4] = checksum( [                 # Checksum
+            *packet.values(),
             encode.ip( self.src[0] ),
             encode.ip( self.dst[0] ),
             pack( ">H", 17 ),
             pack( ">H", self.length )
-        ] ))
+        ] )
 
         self.protocol = [ self.src[1], self.dst[1] ]
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

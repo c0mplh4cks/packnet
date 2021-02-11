@@ -49,7 +49,7 @@ class Header:
         self.protocol = 17
         self.id = 0
         self.dscp = 0
-        self.flags = 0b010
+        self.flags = 0b010 << 13
         self.ttl = 64
         self.length = 0
         self.checksum = 0
@@ -58,24 +58,24 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         vhl = (self.version << 4) + (self.headerlen // 4)
         self.length = 20 + len(self.data)
 
-        packet.insert(0, pack( ">B", vhl ))                 # Version & Header length
-        packet.insert(1, pack( ">B", self.dscp ))           # Differentiated services field
-        packet.insert(2, pack( ">H", self.length ))         # Total length
-        packet.insert(3, pack( ">H", self.id ))             # Identification
-        packet.insert(4, pack( ">H", self.flags << 13 ))    # Flags
-        packet.insert(5, pack( ">B", self.ttl ))            # Time to live
-        packet.insert(6, pack( ">B", self.protocol ))       # Protocol
-        packet.insert(8, encode.ip( self.src[0] ))          # Source IP
-        packet.insert(9, encode.ip( self.dst[0] ))          # Target IP
-        packet.insert(7, checksum( packet ))                # Checksum
-        packet.insert(10, self.data)                        # Data
+        packet[0] = pack( ">B", vhl )               # Version & Header length
+        packet[1] = pack( ">B", self.dscp )         # Differentiated services field
+        packet[2] = pack( ">H", self.length )       # Total length
+        packet[3] = pack( ">H", self.id )           # Identifier
+        packet[4] = pack( ">H", self.flags )        # Flags
+        packet[5] = pack( ">B", self.ttl )          # Time to live
+        packet[6] = pack( ">B", self.protocol )     # Protocol
+        packet[8] = encode.ip( self.src[0] )        # Source IP
+        packet[9] = encode.ip( self.dst[0] )        # Target IP
+        packet[7] = checksum( packet.values() )     # Checksum
+        packet[10] = self.data                      # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

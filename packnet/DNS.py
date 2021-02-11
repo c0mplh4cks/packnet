@@ -55,7 +55,7 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.data = b""
         for section in (self.question, self.answer, self.authority, self.additional):
@@ -65,15 +65,15 @@ class Header:
 
         self.length = 12 + len(self.data)
 
-        packet.insert(0, pack( ">H", self.id ))                 # Transaction ID
-        packet.insert(1, pack( ">H", self.flags ))              # Flags
-        packet.insert(2, pack( ">H", len(self.question) ))      # Questions
-        packet.insert(3, pack( ">H", len(self.answer) ))        # Answer RRs
-        packet.insert(4, pack( ">H", len(self.authority) ))     # Authority RRs
-        packet.insert(5, pack( ">H", len(self.additional) ))    # Additional RRs
-        packet.insert(6, self.data )                            # Data
+        packet[0] = pack( ">H", self.id )               # Transaction Identifier
+        packet[1] = pack( ">H", self.flags )            # Flags
+        packet[2] = pack( ">H", len(self.question) )    # Questions
+        packet[3] = pack( ">H", len(self.answer) )      # Answer Records
+        packet[4] = pack( ">H", len(self.authority) )   # Authority Records
+        packet[5] = pack( ">H", len(self.additional) )  # Additional Records
+        packet[6] = self.data                           # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -125,17 +125,17 @@ class Query:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         name = encode.name( self.name, self.header )
 
         self.length = 4 + len(name)
 
-        packet.insert(0, name )                         # Name
-        packet.insert(1, pack( ">H", self.type ))       # Type
-        packet.insert(2, pack( ">H", self.classif ))    # Class
+        packet[0] = name                        # Name
+        packet[1] = pack( ">H", self.type )     # Type
+        packet[2] = pack( ">H", self.classif )  # Class
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -176,7 +176,7 @@ class Answer:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         name = encode.name( self.name, self.header )
         if self.type == 1:
@@ -189,14 +189,14 @@ class Answer:
         self.length = 10 + len(name) + len(cname)
         self.datalength = len(cname)
 
-        packet.insert(0, name)                          # Name
-        packet.insert(1, pack( ">H", self.type ))       # Type
-        packet.insert(2, pack( ">H", self.classif ))    # Class
-        packet.insert(3, pack( ">L", self.ttl ))        # Time to live
-        packet.insert(4, pack( ">H", self.datalength )) # Data Length
-        packet.insert(5, cname)                         # Cname
+        packet[0] = name                            # Name
+        packet[1] = pack( ">H", self.type )         # Type
+        packet[2] = pack( ">H", self.classif )      # Class
+        packet[3] = pack( ">L", self.ttl )          # Time to live
+        packet[4] = pack( ">H", self.datalength )   # Data length
+        packet[5] = cname                           # Cname
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

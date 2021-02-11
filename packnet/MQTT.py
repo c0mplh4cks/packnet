@@ -52,17 +52,17 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         hf = (self.type << 4) + (self.flags)
 
         self.payloadlen = len(self.data)
         self.length = 2 + len(self.data)
 
-        packet.insert(0, pack( ">B", hf ))              # Header flags
-        packet.insert(1, pack( ">B", self.payloadlen )) # Payload length
+        packet[0] = pack( ">B", hf )                # Header flags
+        packet[1] = pack( ">B", self.payloadlen )   # Payload length
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -104,21 +104,21 @@ class Connect:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.protocollen = len(self.protocol)
         self.idlen = len(self.id)
         self.length = 8 + self.protocollen + self.idlen
 
-        packet.insert(0, pack( ">H", self.protocollen ))    # Protocol length
-        packet.insert(1, self.protocol.encode() )           # Protocol
-        packet.insert(2, pack( ">B", self.version ))        # Version
-        packet.insert(3, pack( ">B", self.flags ))          # Flags
-        packet.insert(4, pack( ">H", self.keepalive ))      # Keep alive
-        packet.insert(5, pack( ">H", self.idlen ))          # ID length
-        packet.insert(6, self.id.encode() )                 # ID
+        packet[0] = pack( ">H", self.protocollen )  # Protocol length
+        packet[1] = self.protocol.encode()          # Protocol
+        packet[2] = pack( ">B", self.version )      # Version
+        packet[3] = pack( ">B", self.flags )        # Flags
+        packet[4] = pack( ">H", self.keepalive )    # Keep alive
+        packet[5] = pack( ">H", self.idlen )        # Identifier length
+        packet[6] = self.id.encode()                # Identifier
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -161,14 +161,14 @@ class ConnectACK:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 2
 
-        packet.insert(0, pack( ">B", self.flags ))      # Flags
-        packet.insert(1, pack( ">B", self.returncode )) # Return code
+        packet[0] = pack( ">B", self.flags )        # Flags
+        packet[1] = pack( ">B", self.returncode )   # Return code
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -205,17 +205,17 @@ class Subscribe:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.topiclen = len(self.topic)
         self.length = 5 + self.topiclen
 
-        packet.insert(0, pack( ">H", self.id ))         # Message identifier
-        packet.insert(1, pack( ">H", self.topiclen ))   # Topic length
-        packet.insert(2, self.topic.encode() )          # Topic
-        packet.insert(4, pack( ">B", self.reqqos ))     # Requested QoS
+        packet[0] = pack( ">H", self.id )           # Message identifier
+        packet[1] = pack( ">H", self.topiclen )     # Topic length
+        packet[2] = self.topic.encode()             # Topic
+        packet[3] = pack( ">B", self.reqqos )       # Requested QoS
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -254,14 +254,14 @@ class SubscribeACK:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 3
 
-        packet.insert(0, pack( ">H", self.id ))         # Message identifier
-        packet.insert(1, pack( ">B", self.grantqos ))   # Granted QoS
+        packet[0] = pack( ">H", self.id )           # Message identifier
+        packet[1] = pack( ">B", self.grantqos )     # Granted QoS
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -297,16 +297,16 @@ class Publish:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.topiclen = len(self.topic)
         self.length = 2 + len(self.msg) + self.topiclen
+        
+        packet[0] = pack( ">H", self.topiclen )     # Topic length
+        pakcet[1] = self.topic.encode()             # Topic
+        packet[2] = self.msg.encode()               # Message
 
-        packet.insert(0, pack( ">H", self.topiclen ))
-        packet.insert(1, self.topic.encode() )
-        packet.insert(2, self.msg.encode() )
-
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

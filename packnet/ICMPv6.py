@@ -44,6 +44,8 @@ class Header:
 
         self.type = 0
         self.code = 0
+        self.src = []
+        self.dst = []
         self.checksum = 0
         self.protocol = None
         self.length = 0
@@ -52,22 +54,22 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 4 + len(self.data)
 
-        packet.insert(0, pack( ">B", self.type ))       # Type
-        packet.insert(1, pack( ">B", self.code ))       # Code
-        packet.insert(3, self.data )                    # Data
-        packet.insert(2, checksum( [                    # Checksum
-            *packet,
+        packet[0] = pack( ">B", self.type )     # Type
+        packet[1] = pack( ">B", self.code )     # Code
+        packet[3] = self.data                   # Data
+        packet[2] = checksum( [                 # Checksum
+            *packet.values(),
             encode.ipv6( self.src[0] ),
             encode.ipv6( self.dst[0] ),
             pack( ">B", 58 ),
-            pack( ">", self.length )
-        ] ))
+            pack( ">H", self.length )
+        ] )
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
@@ -105,15 +107,15 @@ class Echo:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 4 + len(self.data)
 
-        packet.insert(0, pack( ">H", self.id ))             # Identifier
-        packet.insert(1, pack( ">H", self.seq ))            # Sequence number
-        packet.insert(3, self.data )                        # Data
+        packet[0] = pack( ">H", self.id )       # Identifier
+        packet[1] = pack( ">H", self.seq )      # Sequence number
+        packet[2] = self.data                   # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 

@@ -51,16 +51,16 @@ class Header:
 
 
     def build(self):
-        packet = []
+        packet = {}
 
         self.length = 14 + len(self.data)
 
-        packet.insert(0, encode.mac( self.dst[2] ))     # Target MAC
-        packet.insert(1, encode.mac( self.src[2] ))     # Source MAC
-        packet.insert(2, pack( ">H", self.protocol ))   # Protocol
-        packet.insert(3, self.data)                     # Data
+        packet[0] = encode.mac( self.dst[2] )       # Target MAC
+        packet[1] = encode.mac( self.src[2] )       # Source MAC
+        packet[2] = pack( ">H", self.protocol )     # Protocol
+        packet[3] = self.data                       # Data
 
-        self.packet = b"".join(packet)
+        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
 
         return self.packet
 
