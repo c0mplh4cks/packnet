@@ -138,3 +138,8 @@
   * **[~]** Moved `Tree` from `Packager` to separate module
   * **[~]** Changed `Packager` to make use of `Tree` module
   * **[~]** Fixed `tobyte` function from `standards` module
+
+
+### v2.1.4
+
+  * **[~]** Improved `build` functions by replacing lists with dictionaries

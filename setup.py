@@ -7,7 +7,7 @@ README = open("README.md").read()
 
 
 setup(  name = "packnet",
-        version = "2.1.3",
+        version = "2.1.4",
         description = "Python3 package for low-level networking",
         long_description=README,
         long_description_content_type="text/markdown",
