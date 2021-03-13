@@ -26,6 +26,7 @@ from struct import pack, unpack
 class MAC:
     def __init__(self, mac=""):
         self.mac = mac
+        self.size = 6
 
 
     def __str__(self):

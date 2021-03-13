@@ -26,6 +26,7 @@ from struct import pack, unpack
 class IP:
     def __init__(self, ip=""):
         self.ip = ip
+        self.size = 4
 
 
     def __str__(self):

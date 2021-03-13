@@ -26,6 +26,7 @@ from struct import pack, unpack
 class IPv6:
     def __init__(self, ip=""):
         self.ip = ip
+        self.size = 16
 
 
     def __str__(self):

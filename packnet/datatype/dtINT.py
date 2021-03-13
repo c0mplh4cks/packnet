@@ -13,12 +13,6 @@
 
 
 
-# === Importing Dependencies === #
-
-
-
-
-
 
 
 # === INT === #
@@ -50,29 +44,6 @@ class INT:
     @integer.setter
     def integer(self, value):
         self.__integer = value if type(value) != bytes else self.decode(value, self.size, self.format)[1]
-
-    @property
-    def format(self):
-        return self.__format
-
-
-    @format.setter
-    def format(self, value):
-        if type(value) != str:
-            raise TypeError
-        self.__format = value
-
-
-    @property
-    def size(self):
-        return self.__size
-
-
-    @size.setter
-    def size(self, value):
-        if type(value) != int:
-            raise TypeError
-        self.__size = value
 
 
 
