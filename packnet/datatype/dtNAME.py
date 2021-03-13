@@ -38,11 +38,6 @@ class NAME:
 
 
     @property
-    def size(self):
-        return len( self.to_bytes() )
-
-
-    @property
     def name(self):
         return self.__name
 
