@@ -13,9 +13,9 @@
 
 # === Importing Dependencies === #
 from . import ETHERNET
-from . import IPv4, ARP
-from . import ICMP, UDP, TCP
-from . import MQTT, DNS
+from . import ARP, IPv4, IPv6
+from . import UDP, TCP, ICMP, ICMPv6
+from . import DNS
 
 
 
@@ -25,32 +25,20 @@ from . import MQTT, DNS
 
 # === Tree === #
 class Tree:
-    def __init__(self):
-        self.nodes = [
-            [ ETHERNET.Header, IPv4.Header, 0x0800 ],
-            [ ETHERNET.Header, ARP.Header, 0x0806 ],
-            [ IPv4.Header, ICMP.Header, 1 ],
-            [ IPv4.Header, UDP.Header, 17 ],
-            [ IPv4.Header, TCP.Header, 6 ],
-            [ UDP.Header, DNS.Header, 53 ],
-            [ TCP.Header, MQTT.Header, 1883 ],
-        ]
-
-
-
-    def get(self, parent=None, child=None, edge=None):
-        for node in self.nodes:
+    @classmethod
+    def get(cls, parent=None, child=None, edge=None):
+        for node in cls.nodes:
             p, c, e = node
             result = [p==parent, c==child, e==edge]
             if result.count(True) == 2:
                 return node[ result.index(False) ]
 
 
-
-    def getnodes(self, parent=None, child=None, edge=None):
+    @classmethod
+    def getnodes(cls, parent=None, child=None, edge=None):
         out = []
-        
-        for node in self.nodes:
+
+        for node in cls.nodes:
             p, c, e = node
             result = [p==parent, c==child, e==edge]
 
@@ -58,3 +46,30 @@ class Tree:
                 out.append(node)
 
         return out
+
+
+
+
+
+
+
+# === Protocol Tree === #
+class Protocoltree(Tree):
+    nodes = [
+        [ ETHERNET.Header, IPv4.Header, 0x0800 ],
+        [ ETHERNET.Header, ARP.Header, 0x0806 ],
+
+        [ IPv4.Header, ICMP.Header, 1 ],
+        [ IPv4.Header, UDP.Header, 17 ],
+        [ IPv4.Header, TCP.Header, 6 ],
+
+        [ UDP.Header, DNS.Header, 53 ],
+
+        [ ICMP.Header, ICMP.Echo, 8],
+        [ ICMP.Header, ICMP.Echo, 0],
+        [ ICMP.Header, ICMP.TimeExceeded, 11],
+        [ ICMP.Header, ICMP.Redirect, 5],
+
+        [ ICMPv6.Header, ICMPv6.Echo, 128],
+        [ IPv6.Header, ICMPv6.Header, 58],
+    ]
