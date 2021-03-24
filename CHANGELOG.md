@@ -162,4 +162,6 @@
   * **[~]** Numerous small fixes
   * **[+]** Added `Frame` class for improved code
   * **[+]** Added automated compression for `name` in `DNS`
+  * **[x]** Removed MQTT protocol class
+  * **[x]** Removed RAW class
   * **[~]** **Made big internal code improvements for each file**
