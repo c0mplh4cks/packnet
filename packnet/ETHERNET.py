@@ -5,11 +5,7 @@
  ETHERNET
 
      .---.--------------.
-     | 7 | Application  |
-     |---|--------------|
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
+     | 5 | Application  |
      |---|--------------|
      | 4 | Transport    |
      |---|--------------|
@@ -28,8 +24,8 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode
+from . import Frame
+from . import INT, MAC, ADDR
 
 
 
@@ -38,43 +34,16 @@ from .standards import encode, decode
 
 
 # === Ethernet Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.src = ["", 0, ""]
-        self.dst = ["", 0, ""]
-        self.protocol = 2048
-        self.length = 0
-        self.data = b""
+        self.src = ADDR( mac="ff:ff:ff:ff:ff:ff" )
+        self.dst = ADDR( mac="ff:ff:ff:ff:ff:ff" )
+        self.protocol = INT( 2048, size=2 )
 
-
-
-    def build(self):
-        packet = {}
-
-        self.length = 14 + len(self.data)
-
-        packet[0] = encode.mac( self.dst[2] )       # Target MAC
-        packet[1] = encode.mac( self.src[2] )       # Source MAC
-        packet[2] = pack( ">H", self.protocol )     # Protocol
-        packet[3] = self.data                       # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
-
-
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, self.dst[2]      = i+6, decode.mac( packet[i:i+6] )          # Target MAC
-        i, self.src[2]      = i+6, decode.mac( packet[i:i+6] )          # Source MAC
-        i, self.protocol    = i+2, unpack( ">H", packet[i:i+2] )[0]     # Protocol
-        i, self.data        = i+len( packet[i:] ), packet[i:]           # Data
-
-        self.length = i
-
-        return i
+        self.structure = [
+                "dst.mac",  # Target MAC
+                "src.mac",  # Source MAC
+                "protocol"  # Protocol
+        ]

@@ -5,11 +5,7 @@
  ICMP
 
      .---.--------------.
-     | 7 | Application  |
-     |---|--------------|
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
+     | 5 | Application  |
      |---|--------------|
      | 4 | Transport    |
      #===#==============#
@@ -28,8 +24,10 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode, checksum
+from time import time
+from random import randint
+from . import Frame
+from . import INT, IP, ADDR
 
 
 
@@ -38,47 +36,29 @@ from .standards import encode, decode, checksum
 
 
 # === ICMP Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.type = 0
-        self.code = 0
-        self.checksum = 0
-        self.protocol = None
-        self.length = 0
-        self.data = b""
+        self.type = INT( 0, size=1 )
+        self.code = INT( 0, size=1 )
 
+        self.structure = [
+            "type",     # Type
+            "code",     # Code
+            "checksum"  # Checksum
+        ]
 
-
-    def build(self):
-        packet = {}
-
-        self.length = 4 + len(self.data)
-
-        packet[0] = pack( ">B", self.type )     # Type
-        packet[1] = pack( ">B", self.code )     # Code
-        packet[3] = self.data                   # Data
-        packet[2] = checksum( packet.values() ) # Checksum
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+        self.checksumstruct = [
+            "type",
+            "code",
+            "payload"
+        ]
 
 
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, self.type        = i+1, packet[i]                            # Type
-        i, self.code        = i+1, packet[i]                            # Code
-        i, self.checksum    = i+2, unpack( ">H", packet[i:i+2] )[0]     # Checksum
-        i, self.data        = i+len( packet[i:]), packet[i:]            # Data
-
-        self.length = i
-
-        return i
+    @property
+    def protocol(self):
+        return self.type
 
 
 
@@ -87,46 +67,20 @@ class Header:
 
 
 # === Echo === #
-class Echo:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Echo(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.id = 0
-        self.seq = 0
-        self.timestamp = 0
-        self.length = 0
-        self.data = b""
+        self.id = INT( 0, size=2 )
+        self.seq = INT( randint(0, 0xffff), size=2 )
+        self.timestamp = INT( int(time()), size=8, format="little" )
 
+        self.structure = [
+            "id",               # Identifier
+            "seq",              # Sequence number
+            "timestamp"         # Timestamp
 
-
-    def build(self):
-        packet = {}
-
-        self.length = 12 + len(self.data)
-
-        packet[0] = pack( ">H", self.id )           # Identifier
-        packet[1] = pack( ">H", self.seq )          # Sequence number
-        packet[2] = pack( ">H", self.timestamp )    # Timestamp
-        packet[3] = self.data                       # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
-
-
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, self.id          = i+2, unpack( ">H", packet[i:i+2] )[0]     # Identifier
-        i, self.seq         = i+2, unpack( ">H", packet[i:i+2] )[0]     # Sequence number
-        i, self.timestamp   = i+8, unpack( "<Q", packet[i:i+8] )[0]     # Timestamp
-        i, self.data        = i+len( packet[i:] ), packet[i:]           # Data
-
-        self.length = i
-
-        return i
+        ]
 
 
 
@@ -135,39 +89,15 @@ class Echo:
 
 
 # === Time Exceeded === #
-class TimeExceeded:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class TimeExceeded(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.length = 0
-        self.data = b""
+        self.padding = INT( 0, size=4 )
 
-
-
-    def build(self):
-        packet = {}
-
-        self.length = 4 + len(self.data)
-
-        packet[0] = pack( ">L", 0 )     # Unused
-        packet[0] = self.data           # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
-
-
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, unused       = i+4, unpack( ">L", packet[i:i+4] )[0]     # Unused
-        i, self.data    = i+len( packet[i:] ), packet[i:]           # Data
-
-        self.length = i
-
-        return i
+        self.structure = [
+            "padding"           # Padding
+        ]
 
 
 
@@ -176,37 +106,13 @@ class TimeExceeded:
 
 
 # === Redirect === #
-class Redirect:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Redirect(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.gateway = ""
-        self.length = 0
-        self.data = b""
+        self.type = INT( 5, size=1 )
+        self.gateway = IP( "255.255.255.255" )
 
-
-
-    def build(self):
-        packet = {}
-
-        self.length = 4 + len(self.data)
-
-        packet[0] = encode.ip( self.gateway )   # Gateway address
-        packet[1] = self.data                   # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
-
-
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, unused       = i+4, decode.ip( packet[i:i+4] )     # Gateway address
-        i, self.data    = i+len( packet[i:] ), packet[i:]     # Data
-
-        self.length = i
-
-        return i
+        self.structure = [
+            "gateway"           # Gateway
+        ]

@@ -5,11 +5,7 @@
  IPV4
 
      .---.--------------.
-     | 7 | Application  |
-     |---|--------------|
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
+     | 5 | Application  |
      |---|--------------|
      | 4 | Transport    |
      #===#==============#
@@ -28,8 +24,9 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode, checksum
+from random import randint
+from . import Frame
+from . import INT, ADDR
 
 
 
@@ -38,68 +35,54 @@ from .standards import encode, decode, checksum
 
 
 # === IPv4 Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.src = ["", 0, ""]
-        self.dst = ["", 0, ""]
-        self.version = 4
-        self.headerlen = 20
-        self.protocol = 17
-        self.id = 0
-        self.dscp = 0
-        self.flags = 0b010 << 13
-        self.ttl = 64
-        self.length = 0
-        self.checksum = 0
-        self.data = b""
+        self.src = ADDR( ip="255.255.255.255" )
+        self.dst = ADDR( ip="255.255.255.255" )
+        self.version = INT( 4 )
+        self.protocol = INT( 17, size=1 )
+        self.id = INT( randint(0, 0xffff), size=2 )
+        self.dscp = INT( 0 , size=1 )
+        self.flags = INT( 0b010 << 13, size=2 )
+        self.ttl = INT( 64, size=1 )
 
+        self.structure = [
+            "vhl",
+            "dscp",
+            "len.total",
+            "id",
+            "flags",
+            "ttl",
+            "protocol",
+            "checksum",
+            "src.ip",
+            "dst.ip"
+        ]
 
-
-    def build(self):
-        packet = {}
-
-        vhl = (self.version << 4) + (self.headerlen // 4)
-        self.length = 20 + len(self.data)
-
-        packet[0] = pack( ">B", vhl )               # Version & Header length
-        packet[1] = pack( ">B", self.dscp )         # Differentiated services field
-        packet[2] = pack( ">H", self.length )       # Total length
-        packet[3] = pack( ">H", self.id )           # Identifier
-        packet[4] = pack( ">H", self.flags )        # Flags
-        packet[5] = pack( ">B", self.ttl )          # Time to live
-        packet[6] = pack( ">B", self.protocol )     # Protocol
-        packet[8] = encode.ip( self.src[0] )        # Source IP
-        packet[9] = encode.ip( self.dst[0] )        # Target IP
-        packet[7] = checksum( packet.values() )     # Checksum
-        packet[10] = self.data                      # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+        self.checksumstruct = [
+            "vhl",
+            "dscp",
+            "len.total",
+            "id",
+            "flags",
+            "ttl",
+            "protocol",
+            "src.ip",
+            "dst.ip"
+        ]
 
 
 
-    def read(self):
-        packet = self.packet
-        i = 0
+    @property
+    def vhl(self):
+        i = (self.version.integer << 4) + (self.len.header.integer // 4)
+        return INT( i, size=1 )
 
-        i, vhl              = i+1, packet[i]                                # Version & Header length
-        i, self.dscp        = i+1, packet[i]                                # Differentiated services field
-        i, length           = i+2, unpack( ">H", packet[i:i+2] )[0]         # Total length
-        i, self.id          = i+2, unpack( ">H", packet[i:i+2] )[0]         # Identification
-        i, self.flags       = i+2, unpack( ">H", packet[i:i+2] )[0] >> 13   # Flags
-        i, self.ttl         = i+1, packet[i]                                # Time to live
-        i, self.protocol    = i+1, packet[i]                                # Protocol
-        i, self.checksum    = i+2, unpack( ">H", packet[i:i+2] )[0]         # Checksum
-        i, self.src[0]      = i+4, decode.ip( packet[i:i+4] )               # Source IP
-        i, self.dst[0]      = i+4, decode.ip( packet[i:i+4] )               # Target IP
-        i, self.data        = i+len( packet[i:] ), packet[i:]               # Data
 
-        self.version = vhl >> 4
-        self.headerlen = (vhl - (self.version << 4)) * 4
-
-        self.length = i
-
-        return i
+    @vhl.setter
+    def vhl(self, value):
+        i = value.integer
+        self.version.integer = i >> 4
+        self.len.header.integer = (i - (self.version.integer << 4)) * 4

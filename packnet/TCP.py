@@ -5,11 +5,7 @@
  TCP
 
      .---.--------------.
-     | 7 | Application  |
-     |---|--------------|
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
+     | 5 | Application  |
      #===#==============#
      # 4 # Transport    #
      #===#==============#
@@ -28,104 +24,106 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode, checksum
-
-
+from . import Frame
+from . import INT, ADDR, LEN
 
 
 
 
 
 # === TCP Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.src = ["", 0, ""]
-        self.dst = ["", 0, ""]
-        self.seq = 0
-        self.ack = 0
-        self.hlength = 0
-        self.flags = 0b000000000
-        self.win = 65000
-        self.urg = 0
-        self.length = 0
-        self.checksum = 0
+        self.src = ADDR()
+        self.dst = ADDR()
+        self.version = INT( 6, size=2 )
+        self.seq = INT( 0, size=4 )
+        self.ack = INT( 0, size=4 )
+        self.flags = INT( 0 )
+        self.win = INT( 65000, size=2)
+        self.urg = INT( 0, size=2 )
         self.options = []
-        self.protocol = [ self.src[1], self.dst[1] ]
-        self.data = b""
+
+        self.optiontree = { opt().code.integer : opt for opt in [Padding, MSS, Window, SACKpermit, Timestamp] }
+
+        self.structure = [
+            "src.port", # Source port
+            "dst.port", # Target port
+            "seq",      # Sequence number
+            "ack",      # Acknowledgement number
+            "hlf",      # Header length & Flags
+            "win",      # Window size
+            "urg",      # Urgent pointer
+            "checksum"  # Checksum
+        ]
+
+        self.checksumstruct = [
+            "src.port",
+            "dst.port",
+            "seq",
+            "ack",
+            "hlf",
+            "win",
+            "urg",
+            "src.ip",
+            "dst.ip",
+            "version",
+            "len.total"
+        ]
 
 
 
-    def build(self):
-        packet = {}
+    @property
+    def protocol(self):
+        return [ self.src.port.integer, self.dst.port.integer ]
 
-        options = b""
+
+    @property
+    def hlf(self):
+        i = (self.len.header.integer // 4 << 12) + self.flags.integer
+        return INT( i, size=2 )
+
+
+    @hlf.setter
+    def hlf(self, value):
+        i = value.integer
+        self.len.header.integer = (i >> 12) * 4
+        self.flags.integer = i - (self.len.header.integer // 4 << 12)
+
+
+
+    def rlen(self):
+        super().rlen()
+        self.len.header.integer += sum([ len(option) for option in self.options])
+
+
+    def pad(self):
+        pass
+
+
+    def to_bytes(self, *args, **kwargs):
+        packet = super().to_bytes(*args, **kwargs)
+
         for option in self.options:
-            option.build()
-            options += option.packet
-        while len(options) %4 != 0:
-            options = b"\x01" + options
+            packet += option.to_bytes()
 
-        self.length = 20 + len(options) + len(self.data)
-        self.hlength = (20 + len(options)) // 4
-        self.flags += self.hlength << 12
-
-        packet[0] = pack( ">H", self.src[1] )   # Source PORT
-        packet[1] = pack( ">H", self.dst[1] )   # Target PORT
-        packet[2] = pack( ">L", self.seq )      # Sequence number
-        packet[3] = pack( ">L", self.ack )      # Acknowledgement number
-        packet[4] = pack( ">H", self.flags )    # Flags & Header length
-        packet[5] = pack( ">H", self.win )      # Window size
-        packet[7] = pack( ">H", self.urg )      # Urgent pointer
-        packet[6] = checksum( [                 # Checksum
-            *packet.values(),
-            encode.ip( self.src[0] ),
-            encode.ip( self.dst[0] ),
-            pack( ">H", 6 ),
-            pack( ">H", self.length ),
-        ] )
-        packet[8] = options                     # Options
-        packet[9] = self.data                   # Data
-
-        self.protocol = [ self.src[1], self.dst[1] ]
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+        return packet
 
 
+    def from_bytes(self, packet=b"", *args, **kwargs):
+        i = super().from_bytes(packet, *args, **kwargs)[0]
 
-    def read(self):
-        packet = self.packet
-        i = 0
+        while (i < self.len.header.integer):
+            option = self.optiontree[ packet[i] ]()
+            i += option.from_bytes( packet[i:], payload=False )[0]
+            self.options.append( option )
 
-        i, self.src[1]      = i+2, unpack( ">H", packet[i:i+2] )[0]     # Source PORT
-        i, self.dst[1]      = i+2, unpack( ">H", packet[i:i+2] )[0]     # Target PORT
-        i, self.seq         = i+4, unpack( ">L", packet[i:i+4] )[0]     # Sequence number
-        i, self.ack         = i+4, unpack( ">L", packet[i:i+4] )[0]     # Acknowledgement number
-        i, self.flags       = i+2, unpack( ">H", packet[i:i+2] )[0]     # Flags & Header length
-        i, self.win         = i+2, unpack( ">H", packet[i:i+2] )[0]     # Window size
-        i, self.checksum    = i+2, unpack( ">H", packet[i:i+2] )[0]     # Checksum
-        i, self.urg         = i+2, unpack( ">H", packet[i:i+2] )[0]     # Urgent pointer
+        self.payload = packet[i:]
+        self.rlen()
 
-        self.hlength = self.flags >> 12
-        self.flags -= self.hlength << 12
-        self.hlength = self.hlength * 4
-
-        while i < self.hlength:                                         # Option
-            option = Option( packet[i:self.hlength]  )
-            i += option.read()
-            self.options.append(option)
-
-        i, self.data = i+len( packet[i:] ), packet[i:]                   # Data
-
-        self.protocol = [ self.src[1], self.dst[1] ]
-
-        self.length = i
-
-        return i
+        return (i,)
 
 
 
@@ -133,88 +131,53 @@ class Header:
 
 
 
-# === Option === #
-class Option:
-    def __init__(self, packet=b""):
-        self.packet = packet
-
-        self.kind = 0
-        self.length = 0
-        self.mss = 0
-        self.timestamp = 0
-        self.timereply = 0
-        self.scale = 0
-        self.leftedge = 0
-        self.rightedge = 0
-        self.data = b""
+# === Padding === #
+class Padding(Frame):
+    def __init__(self):
+        super().__init__()
+        self.code = INT( 1, size=1 )
+        self.structure = [ "code" ]
 
 
 
-    def build(self):
-        packet = {}
-
-        packet[0] = pack( ">B", self.kind )
-
-        if self.kind == 2:                          # Maximum segment size
-            packet[2] = encode.tobyte( self.mss )
-            self.length = len(b"".join(packet)) +1
-            packet[1] = pack( ">B", self.length )
-
-        elif self.kind == 3:                        # Window scale
-            packet[2] = encode.tobyte( self.scale )
-            self.length = len(b"".join(packet)) +1
-            packet[1] = pack( ">B", self.length )
-
-        elif self.kind == 4:                        # SACK (Selective ACKnowledgement) permitted
-            self.length = 2
-            packet[1] = pack( ">B", self.length )
-
-        elif self.kind == 5:                        # SACK (Selective ACKnowledgement)
-            self.length = 10
-            packet[1] = pack( ">B", self.length )
-            packet[2] = pack( ">L", self.leftedge )
-            packet[3] = pack( ">L", self.rightedge )
-
-        elif self.kind == 8:                        # Timestamps
-            self.length = 10
-            packet[1] = pack( ">B", self.length )
-            packet[2] = pack( ">L", self.timestamp )
-            packet[3] = pack( ">L", self.timereply )
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+# === Maximum Segment Size === #
+class MSS(Frame):
+    def __init__(self):
+        super().__init__()
+        self.code = INT( 2, size=1 )
+        self.len.size = 1
+        self.value = INT( 536, size=2 )
+        self.structure = [ "code", "len.header", "value" ]
 
 
 
-    def read(self):
-        packet = self.packet
-        i = 0
+# === Window Scale === #
+class Window(Frame):
+    def __init__(self):
+        super().__init__()
+        self.code = INT( 3, size=1 )
+        self.len.size = 1
+        self.value = INT( 0, size=1 )
+        self.structure = [ "code", "len.header", "value" ]
 
-        i, self.kind = i+1, unpack( ">B", packet[i:i+1] )[0]
 
-        if self.kind == 2:                                              # Maximum segment size
-            i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.mss = i+(self.length-2), decode.toint( packet[i:i+(self.length-2)] )
 
-        elif self.kind == 3:                                            # Window scale
-            i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.scale = i+(self.length-2), decode.toint( packet[i:i+(self.length-2)] )
+# === Selective ACKnowledgement Permitted === #
+class SACKpermit(Frame):
+    def __init__(self):
+        super().__init__()
+        self.code = INT( 4, size=1 )
+        self.len.size = 1
+        self.structure = [ "code", "len.header" ]
 
-        elif self.kind == 4:                                            # SACK (Selective ACKnowledgement) permitted
-            i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.data = i+(self.length-2), packet[i:i+(self.length-2)]
 
-        elif self.kind == 5:                                            # SACK (Selective ACKnowledgement)
-            i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.leftedge = i+4, unpack( ">L", packet[i:i+4] )[0]
-            i, self.rightedge = i+4, unpack( ">L", packet[i:i+4] )[0]
 
-        elif self.kind == 8:                                            # Timestamps
-            i, self.length = i+1, unpack( ">B", packet[i:i+1] )[0]
-            i, self.timestamp = i+4, unpack( ">L", packet[i:i+4] )[0]
-            i, self.timereply = i+4, unpack( ">L", packet[i:i+4] )[0]
-
-        self.length = i
-
-        return i
+# === Timestamp === #
+class Timestamp(Frame):
+    def __init__(self):
+        super().__init__()
+        self.code = INT( 8, size=1 )
+        self.len.size = 1
+        self.left = INT( 0, size=4 )
+        self.right = INT( 0, size=4 )
+        self.structure = [ "code", "len.header", "left", "right" ]

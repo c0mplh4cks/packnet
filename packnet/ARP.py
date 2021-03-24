@@ -5,11 +5,7 @@
  ARP
 
      .---.--------------.
-     | 7 | Application  |
-     |---|--------------|
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
+     | 5 | Application  |
      |---|--------------|
      | 4 | Transport    |
      #===#==============#
@@ -28,8 +24,8 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode
+from . import Frame
+from . import INT, ADDR
 
 
 
@@ -38,58 +34,27 @@ from .standards import encode, decode
 
 
 # === ARP Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.src = ["", 0, ""]
-        self.dst = ["", 0, ""]
-        self.op = 1
-        self.ht = 1
-        self.pt = 0x0800
-        self.hs = 6
-        self.ps = 4
+        self.src = ADDR( ip="255.255.255.255", mac="ff:ff:ff:ff:ff:ff" )
+        self.dst = ADDR( ip="255.255.255.255", mac="ff:ff:ff:ff:ff:ff" )
+        self.op = INT( 1, size=2 )
+        self.ht = INT( 1, size=2 )
+        self.pt = INT( 0x0800, size=2 )
+        self.hs = INT( 6, size=1 )
+        self.ps = INT( 4, size=1 )
         self.protocol = None
-        self.length = 0
-        self.data = b""
 
-
-
-    def build(self):
-        packet = {}
-
-        self.length = 28
-
-        packet[0] = pack( ">H", self.ht )       # Hardware type
-        packet[1] = pack( ">H", self.pt )       # Protocol type
-        packet[2] = pack( ">B", self.hs )       # Hardware size
-        packet[3] = pack( ">B", self.ps )       # Protocol size
-        packet[4] = pack( ">H", self.op )       # Operation code
-        packet[5] = encode.mac( self.src[2] )   # Source MAC
-        packet[6] = encode.ip( self.src[0] )    # Source IP
-        packet[7] = encode.mac( self.dst[2] )   # Target MAC
-        packet[8] = encode.ip( self.dst[0] )    # Target IP
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
-
-
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, self.ht      = i+2, unpack( ">H", packet[i:i+2] )[0]     # Hardware type
-        i, self.pt      = i+2, unpack( ">H", packet[i:i+2] )[0]     # Protocol type
-        i, self.hs      = i+1, packet[i]                            # Hardware size
-        i, self.ps      = i+1, packet[i]                            # Protocol size
-        i, self.op      = i+2, unpack( ">H", packet[i:i+2] )[0]     # Operation code
-        i, self.src[2]  = i+6, decode.mac( packet[i:i+6] )          # Source MAC
-        i, self.src[0]  = i+4, decode.ip( packet[i:i+4] )           # Source IP
-        i, self.dst[2]  = i+6, decode.mac( packet[i:i+6] )          # Target MAC
-        i, self.dst[0]  = i+4, decode.ip( packet[i:i+4] )           # Target IP
-
-        self.length = i
-
-        return i
+        self.structure = [
+            "ht",       # Hardware type
+            "pt",       # Protocol type
+            "hs",       # Hardware size
+            "ps",       # Protocol size
+            "op",       # Operation code
+            "src.mac",  # Source MAC
+            "src.ip",   # Source IP
+            "dst.mac",  # Target MAC
+            "dst.ip"    # Target IP
+        ]

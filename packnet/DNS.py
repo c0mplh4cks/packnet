@@ -5,12 +5,8 @@
  DNS
 
      #===#==============#
-     # 7 # Application  #
+     # 5 # Application  #
      #===#==============#
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
-     |---|--------------|
      | 4 | Transport    |
      |---|--------------|
      | 3 | Network      |
@@ -28,8 +24,9 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode
+from random import randint
+from . import Frame
+from . import INT, NAME, IP, IPv6
 
 
 
@@ -38,72 +35,71 @@ from .standards import encode, decode
 
 
 # === DNS Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.id = 0
-        self.flags = 0b0000000100000000
+        self.id = INT( randint(0, 0xffff), size=2 )
+        self.flags = INT( 0x100, size=2 )
+        self.questions = INT( 0, size=2 )
+        self.answers = INT( 0, size=2 )
+        self.authorities = INT( 0, size=2 )
+        self.additionals = INT( 0, size=2 )
+        self.protocol = None
+
         self.question = []
         self.answer = []
         self.authority = []
         self.additional = []
-        self.protocol = None
-        self.length = 0
-        self.data = b""
+
+        self.structure = [
+            "id",           # Identifier
+            "flags",        # Flags
+            "questions",    # Questions
+            "answers",      # Answer records
+            "authorities",  # Authority records
+            "additionals"   # Additional records
+        ]
 
 
 
-    def build(self):
-        packet = {}
-
-        self.data = b""
+    def rlen(self):
+        super().rlen()
         for section in (self.question, self.answer, self.authority, self.additional):
-            for record in section:
-                record.build()
-                self.data += record.packet
-
-        self.length = 12 + len(self.data)
-
-        packet[0] = pack( ">H", self.id )               # Transaction Identifier
-        packet[1] = pack( ">H", self.flags )            # Flags
-        packet[2] = pack( ">H", len(self.question) )    # Questions
-        packet[3] = pack( ">H", len(self.answer) )      # Answer Records
-        packet[4] = pack( ">H", len(self.authority) )   # Authority Records
-        packet[5] = pack( ">H", len(self.additional) )  # Additional Records
-        packet[6] = self.data                           # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+            self.len.header.integer += sum([ len(part) for part in section ])
 
 
+    def to_bytes(self, *args, **kwargs):
+        self.questions.integer = len(self.question)
+        self.answers.integer = len(self.answer)
+        self.authorities.integer = len(self.authority)
+        self.additionals.integer = len(self.additional)
 
-    def read(self):
-        packet = self.packet
-        i = 0
+        packet = super().to_bytes(*args, **kwargs)
 
-        i, self.id      = i+2, unpack( ">H", packet[i:i+2] )[0]         # Transaction ID
-        i, self.flags   = i+2, unpack( ">H", packet[i:i+2] )[0]         # Flags
-        i, questions    = i+2, unpack( ">H", packet[i:i+2] )[0]         # Questions
-        i, answers      = i+2, unpack( ">H", packet[i:i+2] )[0]         # Answer RRs
-        i, authoritys   = i+2, unpack( ">H", packet[i:i+2] )[0]         # Authority RRs
-        i, additionals  = i+2, unpack( ">H", packet[i:i+2] )[0]         # Additional RRs
-        i, self.data    = i, packet[i:]                                 # Data
+        for section in (self.question, self.answer, self.authority, self.additional):
+            for part in section:
+                packet += part.to_bytes( header=packet )
 
-        for j in range(questions):                                              # Question data
-            query = Query( self.packet[i:], self.packet )
-            i += query.read()
-            self.question.append(query)
+        return packet
 
-        for j in range(answers):                                                # Answer data
-            answer = Answer( self.packet[i:], self.packet )
-            i += answer.read()
-            self.answer.append(answer)
 
-        self.length = i
+    def from_bytes(self, packet=b"", *args, **kwargs):
+        i = super().from_bytes(packet, *args, **kwargs)[0]
 
-        return i
+        self.question = [ Query() for _ in range( self.questions.integer ) ]
+        self.answer = [ Answer() for _ in range( self.answers.integer ) ]
+        self.authority = [ Authority() for _ in range( self.authorities.integer ) ]
+        self.additional = [ Additional() for _ in range( self.additionals.integer ) ]
+
+        for section in (self.question, self.answer, self.authority, self.additional):
+            for part in section:
+                i += part.from_bytes( packet[i:], header=packet[:i] )[0]
+
+        self.payload = packet[i:]
+        self.rlen()
+
+        return (i,)
 
 
 
@@ -112,46 +108,19 @@ class Header:
 
 
 # === Query === #
-class Query:
-    def __init__(self, packet=b"", header=b""):
-        self.packet = packet
-        self.header = header
+class Query(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.name = ""
-        self.type = 1
-        self.classif = 1
-        self.length = 0
+        self.name = NAME()
+        self.type = INT( 1, size=2 )
+        self.classif = INT( 1, size=2 )
 
-
-
-    def build(self):
-        packet = {}
-
-        name = encode.name( self.name, self.header )
-
-        self.length = 4 + len(name)
-
-        packet[0] = name                        # Name
-        packet[1] = pack( ">H", self.type )     # Type
-        packet[2] = pack( ">H", self.classif )  # Class
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
-
-
-
-    def read(self):
-        packet = self.packet
-        i = 0
-
-        i, self.name    = decode.name( packet[i:], self.header, i )     # Name
-        i, self.type    = i+2, unpack( ">H", packet[i:i+2] )[0]         # Type
-        i, self.classif = i+2, unpack( ">H", packet[i:i+2] )[0]         # Class
-
-        self.length = i
-
-        return i
+        self.structure = [
+            "name",
+            "type",
+            "classif"
+        ]
 
 
 
@@ -160,65 +129,66 @@ class Query:
 
 
 # === Answer === #
-class Answer:
-    def __init__(self, packet=b"", header=b""):
-        self.packet = packet
-        self.header = header
+class Answer(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.name = ""
-        self.type = 1
-        self.classif = 1
-        self.ttl = 64
-        self.cname = ""
-        self.length = 0
-        self.datalength = 0
+        self.name = NAME()
+        self.type = INT( 1, size=2 )
+        self.classif = INT( 1, size=2 )
+        self.ttl = INT( 64, size=4 )
+        self.cname = IP()
 
-
-
-    def build(self):
-        packet = {}
-
-        name = encode.name( self.name, self.header )
-        if self.type == 1:
-            cname = encode.ip( self.cname )
-        if self.type == 28:
-            cname = encode.ipv6( self.cname )
-        elif self.type != 1:
-            cname = encode.name( self.cname, self.header)
-
-        self.length = 10 + len(name) + len(cname)
-        self.datalength = len(cname)
-
-        packet[0] = name                            # Name
-        packet[1] = pack( ">H", self.type )         # Type
-        packet[2] = pack( ">H", self.classif )      # Class
-        packet[3] = pack( ">L", self.ttl )          # Time to live
-        packet[4] = pack( ">H", self.datalength )   # Data length
-        packet[5] = cname                           # Cname
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+        self.structure = [
+            "name",
+            "type",
+            "classif",
+            "ttl",
+            "len.payload"
+        ]
 
 
 
-    def read(self):
-        packet = self.packet
-        i = 0
+    def to_bytes(self, *args, **kwargs):
+        self.payload = self.cname.to_bytes()
 
-        i, self.name        = decode.name( packet[i:], self.header, i )     # Name
-        i, self.type        = i+2, unpack( ">H", packet[i:i+2] )[0]         # Type
-        i, self.classif     = i+2, unpack( ">H", packet[i:i+2] )[0]         # Class
-        i, self.ttl         = i+4, unpack( ">L", packet[i:i+4] )[0]         # Time to live
-        i, self.datalength  = i+2, unpack( ">H", packet[i:i+2] )[0]         # Data Length
+        return super().to_bytes(*args, **kwargs)
 
-        if self.type == 1:                                                  # Cname
-            i, self.cname = i+4, decode.ip( packet[i:] )
-        elif self.type == 28:
-            i, self.cname = i+16, decode.ipv6( packet[i:] )
-        elif self.type != 1:
-            i, self.cname = decode.name( packet[i:], self.header, i )
 
-        self.length = i
+    def from_bytes(self, *args, **kwargs):
+        i = super().from_bytes(*args, **kwargs)[0]
 
-        return i
+        if self.type.integer == 1:
+            self.cname = IP()
+        elif self.type.integer == 28:
+            self.cname = IPv6()
+        else:
+            self.cname = NAME()
+
+        i += self.cname.from_bytes( packet[i:] )[0]
+        self.payload = packet[i:]
+        self.rlen()
+
+        return (i,)
+
+
+
+
+
+
+
+# === Authority === #
+class Authority(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+
+
+
+
+
+# === Additional === #
+class Additional(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

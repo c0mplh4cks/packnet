@@ -5,11 +5,7 @@
  IPv6
 
      .---.--------------.
-     | 7 | Application  |
-     |---|--------------|
-     | 6 | Presentation |
-     |---|--------------|
-     | 5 | Session      |
+     | 5 | Application  |
      |---|--------------|
      | 4 | Transport    |
      #===#==============#
@@ -28,9 +24,8 @@
 
 
 # === Importing Dependencies === #
-from struct import pack, unpack
-from .standards import encode, decode
-
+from . import Frame
+from . import INT, ADDR
 
 
 
@@ -38,61 +33,39 @@ from .standards import encode, decode
 
 
 # === IPv6 Header === #
-class Header:
-    def __init__(self, packet=b""):
-        self.packet = packet
+class Header(Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.src = ["", 0, ""]
-        self.dst = ["", 0, ""]
-        self.version = 6
-        self.traffic = 0b00000000
-        self.flowlabel = 0b00010111010011101110
-        self.nextheader = 58
-        self.hop = 64
-        self.length = 0
-        self.payloadlen = 0
-        self.data = b""
+        self.src = ADDR( version=6 )
+        self.dst = ADDR( version=6 )
+        self.version = INT( 6 )
+        self.traffic = INT( 0 )
+        self.flowlabel = INT( 0 )
+        self.hop = INT( 64, size=1 )
+        self.protocol = INT( 58, size=1 )
+        self.vtf = INT( 0, size=4 )
 
-
-
-    def build(self):
-        packet = {}
-
-        vtf = (self.version << 24) + (self.traffic << 20) + (self.flowlabel)
-
-        self.payloadlen = len(self.data)
-        self.length = 40 + self.payloadlen
-
-        packet[0] = pack( ">L", vtf )               # Version, Traffic class & Flowlabel
-        packet[1] = pack( ">H", self.payloadlen )   # Data length
-        packet[2] = pack( ">B", self.nextheader )   # Next header
-        packet[3] = pack( ">B", self.hop )          # Hop limit
-        packet[4] = encode.ipv6( self.src[0] )      # Source IP
-        packet[5] = encode.ipv6( self.dst[0] )      # Target IP
-        packet[6] = self.data                       # Data
-
-        self.packet = b"".join([ value for key, value in sorted(packet.items()) ])
-
-        return self.packet
+        self.structure = [
+            "vtf",
+            "len.payload",
+            "protocol",
+            "hop",
+            "src.ipv6",
+            "dst.ipv6"
+        ]
 
 
 
-    def read(self):
-        packet = self.packet
-        i = 0
+    @property
+    def vtf(self):
+        i = (self.version.integer << 24) + (self.traffic.integer << 20) + (self.flowlabel.integer)
+        return INT( i, size=4 )
 
-        i, vtf              = i+4, unpack( ">L", packet[i:i+4] )[0]     # Version, Traffic class & Flowlabel
-        i, self.payloadlen  = i+2, unpack( ">H", packet[i:i+2] )[0]     # Data length
-        i, self.nextheader  = i+1, packet[i]                            # Next header
-        i, self.hop         = i+1, packet[i]                            # Hop limit
-        i, self.src[0]      = i+16, decode.ipv6( packet[i:i+16] )       # Source IP
-        i, self.dst[0]      = i+16, decode.ipv6( packet[i:i+16] )       # Target IP
-        i, self.data        = i+len( packet[i:] ), packet[i:]           # Data
 
-        self.version = vtf >> 24
-        self.traffic = (vtf - self.version) >> 20
-        self.flowlabel = (vtf - self.version - self.traffic)
-
-        self.length = i
-
-        return i
+    @vtf.setter
+    def vtf(self, value):
+        i = value.integer
+        self.version.integer = i >> 24
+        self.traffice.integer = (i - (self.version.integer << 24)) >> 20
+        self.flowlabel.integer = (i - (self.version.integer << 24) - (self.traffic.integer << 20))
