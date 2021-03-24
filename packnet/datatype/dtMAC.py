@@ -29,11 +29,11 @@ class MAC:
 
 
     def __str__(self):
-        return f"{ self.mac }"
+        return f"{self.mac}"
 
 
     def __len__(self):
-        return len( self.to_bytes() )
+        return 6
 
 
 
@@ -61,10 +61,10 @@ class MAC:
         return encoded
 
 
-    def to_bytes(self):
+    def to_bytes(self, *args, **kwargs):
         return self.encode( self.mac )
 
 
-    def from_bytes(self, encoded):
+    def from_bytes(self, encoded, *args, **kwargs):
         length, self.mac = self.decode(encoded)
         return length, self.mac

@@ -15,7 +15,7 @@
 
 # === Importing Dependencies === #
 from struct import pack, unpack
-from . import IP, IPv6, MAC, INT
+from . import IP, MAC, INT
 
 
 
@@ -25,13 +25,13 @@ from . import IP, IPv6, MAC, INT
 
 # === ADDR === #
 class ADDR:
-    def __init__(self, ip="", port=0, mac="", ipv6=""):
+    def __init__(self, ip="255.255.255.255", port=0, mac="ff:ff:ff:ff:ff:ff", version=4):
         self.addr = [ip, port, mac]
-        self.ipv6 = ipv6
+        self.version = version
 
 
     def __str__(self):
-        return f"['{ self.ip }', { self.port }, '{ self.mac }']"
+        return f"['{self.ip}', {self.port}, '{self.mac}']"
 
 
     def __getitem__(self, key):
@@ -56,6 +56,15 @@ class ADDR:
             raise IndexError
 
 
+    @property
+    def version(self):
+        return self.ip.version
+
+
+    @version.setter
+    def version(self, value):
+        self.ip.version = value
+
 
     @property
     def ip(self):
@@ -64,17 +73,7 @@ class ADDR:
 
     @ip.setter
     def ip(self, value):
-        self.__ip = IP(value)
-
-
-    @property
-    def ipv6(self):
-        return self.__ipv6
-
-
-    @ipv6.setter
-    def ipv6(self, value):
-        self.__ipv6 = IPv6(value)
+        self.__ip = IP(value) if type(value) == str else value
 
 
     @property
@@ -84,7 +83,7 @@ class ADDR:
 
     @port.setter
     def port(self, value):
-        self.__port = INT(value, 2, "big")
+        self.__port = INT(value, 2, "big") if type(value) == int else value
 
 
     @property
@@ -94,7 +93,7 @@ class ADDR:
 
     @mac.setter
     def mac(self, value):
-        self.__mac = MAC(value)
+        self.__mac = MAC(value) if type(value) == str else value
 
 
     @property

@@ -53,7 +53,7 @@ class CHECKSUM(INT):
         if (len(data) %2) != 0:
             data += b"\x00"
 
-        values = unpack( f">{ len(data)//2 }H", data )
+        values = unpack( f">{len(data)//2}H", data )
         n = sum(values) %65535
         n = 65535-n
 

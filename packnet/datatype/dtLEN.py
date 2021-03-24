@@ -25,12 +25,15 @@ from . import INT
 
 # === LEN === #
 class LEN:
-    def __init__(self, header=0, payload=0, total=0):
-        self.length = (header, payload, total)
+    def __init__(self, header=0, payload=0, total=0, size=2):
+        self.__size = size
+        self.header = INT( 0 )
+        self.payload = INT( 0 )
+        self.__total = INT( 0 )
 
 
     def __str__(self):
-        return f"({ self.header }, { self.payload }, { self.total })"
+        return f"({self.header}, {self.payload}, {self.total})"
 
 
     def __getitem__(self, key):
@@ -57,42 +60,23 @@ class LEN:
 
 
     @property
-    def header(self):
-        return self.__header
+    def size(self):
+        return self.__size
 
 
-    @header.setter
-    def header(self, value):
-        self.__header = INT(value)
-
-
-    @property
-    def payload(self):
-        return self.__payload
-
-
-    @payload.setter
-    def payload(self, value):
-        self.__payload = INT(value)
+    @size.setter
+    def size(self, value):
+        self.header.size = value
+        self.payload.size = value
+        self.total.size = value
 
 
     @property
     def total(self):
-        if not int(self.__total):
-            return INT( int(self.header) + int(self.payload) )
+        self.__total.integer = (self.header.integer + self.payload.integer)
         return self.__total
 
 
     @total.setter
     def total(self, value):
-        self.__total = INT(value)
-
-
-    @property
-    def length(self):
-        return ( int(self.header), int(self.payload), int(self.total) )
-
-
-    @length.setter
-    def length(self, value):
-        self.header, self.payload, self.total = value
+        self.__total.integer = value.integer

@@ -24,7 +24,7 @@ class INT:
 
 
     def __str__(self):
-        return f"{ self.integer }"
+        return f"{self.integer}"
 
 
     def __int__(self):
@@ -59,10 +59,10 @@ class INT:
         return len(encoded), integer
 
 
-    def to_bytes(self):
+    def to_bytes(self, *args, **kwargs):
         return self.encode( self.integer, self.size, self.format )
 
 
-    def from_bytes(self, encoded):
+    def from_bytes(self, encoded, *args, **kwargs):
         length, self.integer = self.decode( encoded, self.size, self.format )
         return length, self.integer

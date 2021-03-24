@@ -29,7 +29,7 @@ class NAME:
 
 
     def __str__(self):
-        return f"{ self.name }"
+        return f"{self.name}"
 
 
     def __len__(self):
@@ -51,15 +51,16 @@ class NAME:
     @staticmethod
     def decode(encoded):
         labels = []
-        name = encoded
+        i = 0
 
         while True:
-            l = name[0]
+            l = encoded[0]
+            i += 1+l
             if l == 0: break
-            labels.append( name[1:1+l].decode() )
-            name = name[1+l:]
+            labels.append( encoded[1:1+l].decode() )
+            encoded = encoded[1+l:]
 
-        return len(encoded), ".".join(labels)
+        return i, ".".join(labels)
 
 
     @staticmethod
@@ -88,19 +89,22 @@ class NAME:
         encoded = cls.encode( name )
         i = 0
 
-        while True:
+        for _ in range( len( name.split(".") ) ):
             f = header.find( encoded[i:] )
             if f != -1: break
             l = encoded[i]
             i += 1+l
 
-        return encoded[:i] + pack( ">H", 0xc000+f )
+        if f == -1:
+            return encoded
+        else:
+            return encoded[:i] + pack( ">H", 0xc000+f )
 
 
-    def to_bytes(self, header=b""):
+    def to_bytes(self, header=b"", *args, **kwargs):
         return self.compress( self.name, header )
 
 
-    def from_bytes(self, encoded, header=b""):
+    def from_bytes(self, encoded, header=b"", *args, **kwargs):
         length, self.name = self.decompress( encoded, header )
         return length, self.name
