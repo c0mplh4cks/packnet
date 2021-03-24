@@ -143,3 +143,23 @@
 ### v2.1.4
 
   * **[~]** Improved `build` functions by replacing lists with dictionaries
+
+
+### v3.0.0
+
+*This update was focused on internal code improvements*
+
+  * **[+]** Added `datatype` classes
+    * INT
+    * IP
+    * NAME
+    * MAC
+    * CHECKSUM
+    * ADDR
+    * LEN
+  * **[x]** Removed `encode`, `decode` and `checksum` functions from `standards`
+  * **[~]** Changed `standards` into `general`
+  * **[~]** Numerous small fixes
+  * **[+]** Added `Frame` class for improved code
+  * **[+]** Added automated compression for `name` in `DNS`
+  * **[~]** **Made big internal code improvements for each file**

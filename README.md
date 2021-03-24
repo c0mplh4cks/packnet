@@ -1,6 +1,8 @@
 # PACKNET
 *Hacked together into entirety by c0mplh4cks*
 
+### NOTE THAT THIS DOCUMENTATION IS OUTDATED
+
 ____
 
 
@@ -17,7 +19,6 @@ ____
 * [Installation](#installation)
   1. [PyPi](#installation-from-pypi)
   2. [GitHub](#installation-from-github)
-* [Importing packnet](#import)
 * [Building packets](#building)
   1. [ARP request](#arp-request-encode)
   2. [TCP message](#tcp-message-encode)
@@ -95,44 +96,6 @@ pip3 install .
 or
 ```
 pip install .
-```
-
-
-____
-
-
-## Import
-
-Packages can be imported using different methods in Python. The following examples will show how this package can be imported and used in numerous ways.  
-*(Note that the first and third examples are preferred)*
-```python
-import packnet  # Imports everything inside the package.
-
-packnet.standards.maclookup("00:00:00:00:00:00")
-packnet.standards.encode.ip("127.0.0.1")
-interface = packnet.Interface()
-ethernet_header = packnet.ETHERNET.Header()
-dns_query = packnet.DNS.Query()
-```
-
-```python
-from packnet import * # Imports everything inside the package. NOT RECOMMENDED!
-
-standards.maclookup("00:00:00:00:00:00")
-standards.encode.ip("127.0.0.1")
-interface = Interface()
-ethernet_header = ETHERNET.Header()
-dns_query = DNS.Query()
-```
-
-```python
-from packnet import standards, Interface, ETHERNET, DNS   # Imports specific modules/objects/functions from package.
-
-standards.maclookup("00:00:00:00:00:00")
-standards.encode.ip("127.0.0.1")
-interface = Interface()
-ethernet_header = ETHERNET.Header()
-dns_query = DNS.Query()
 ```
 
 
