@@ -176,3 +176,4 @@
   * **[~]** Improved usage of `ADDR` and `LEN` custom datatypes
   * **[~]** Adjusted usage of `ICMPv6` and `IPv6` to work with improved `IP` datatype
   * **[~]** Fixed mistake regarding `randint` in `ICMP.Echo`
+  * **[~]** Updated usage of ipv6 in `DNS`
