@@ -51,8 +51,8 @@ class Header(Frame):
             "len.payload",
             "protocol",
             "hop",
-            "src.ipv6",
-            "dst.ipv6"
+            "src.ip",
+            "dst.ip"
         ]
 
 
@@ -67,5 +67,5 @@ class Header(Frame):
     def vtf(self, value):
         i = value.integer
         self.version.integer = i >> 24
-        self.traffice.integer = (i - (self.version.integer << 24)) >> 20
+        self.traffic.integer = (i - (self.version.integer << 24)) >> 20
         self.flowlabel.integer = (i - (self.version.integer << 24) - (self.traffic.integer << 20))

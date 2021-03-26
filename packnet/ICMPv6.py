@@ -53,8 +53,8 @@ class Header(Frame):
             "type",
             "code",
             "payload",
-            "src.ipv6",
-            "dst.ipv6",
+            "src.ip",
+            "dst.ip",
             "len.header",
             b"\x3a"
         ]
