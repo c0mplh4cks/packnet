@@ -26,7 +26,7 @@
 # === Importing Dependencies === #
 from random import randint
 from . import Frame
-from . import INT, NAME, IP, IPv6
+from . import INT, NAME, IP
 
 
 
@@ -159,9 +159,9 @@ class Answer(Frame):
         i = super().from_bytes(*args, **kwargs)[0]
 
         if self.type.integer == 1:
-            self.cname = IP()
+            self.cname = IP( version=4 )
         elif self.type.integer == 28:
-            self.cname = IPv6()
+            self.cname = IP( version=6 )
         else:
             self.cname = NAME()
 
