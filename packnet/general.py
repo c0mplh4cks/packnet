@@ -43,8 +43,6 @@ def maclookup(mac):
     mac = mac.upper().replace(":", "")
 
     vendor = vendors.get( mac[:6] )
-    if not vendor:
-        vendor = "Unknown vendor"
 
     return vendor
 
@@ -53,7 +51,8 @@ def maclookup(mac):
 
 
 # === Get MAC === #
-def getmac(ip, interface=Interface(), timeout=3):
+def getmac(ip, interface=None, timeout=3):
+    if not interface: interface = Interface()
     if interface.passive: return None
 
     src = interface.addr.addr
