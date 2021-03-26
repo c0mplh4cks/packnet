@@ -165,3 +165,14 @@
   * **[x]** Removed MQTT protocol class
   * **[x]** Removed RAW class
   * **[~]** **Made big internal code improvements for each file**
+
+
+### v3.0.1
+
+  * **[+]** Added/Updated documentation
+  * **[~]** Bug causing permission issues in `general` fixed
+  * **[~]** The `maclookup` function in `general` now returns `None` when no result has been found
+  * **[~]** Improved debug info for `debug` method in `frame`
+  * **[~]** Improved usage of `ADDR` and `LEN` custom datatypes
+  * **[~]** Adjusted usage of `ICMPv6` and `IPv6` to work with improved `IP` datatype
+  * **[~]** Fixed mistake regarding `randint` in `ICMP.Echo`

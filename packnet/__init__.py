@@ -12,4 +12,4 @@ from .tree import Tree, Protocoltree
 from .packager import Packager
 from .interface import Interface
 
-from .general import maclookup, getpublicip
+from . import general

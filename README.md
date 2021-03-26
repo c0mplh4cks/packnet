@@ -1,7 +1,6 @@
 # PACKNET
 *Hacked together into entirety by c0mplh4cks*
 
-### NOTE THAT THIS DOCUMENTATION IS OUTDATED
 
 ____
 
@@ -19,25 +18,38 @@ ____
 * [Installation](#installation)
   1. [PyPi](#installation-from-pypi)
   2. [GitHub](#installation-from-github)
-* [Building packets](#building)
-  1. [ARP request](#arp-request-encode)
-  2. [TCP message](#tcp-message-encode)
-  3. [UDP message](#udp-message-encode)
-  4. [DNS query](#dns-query-encode)
-* [Reading packets](#reading)
-  1. [ARP](#arp-decode)
-  2. [TCP](#tcp-decode)
-  3. [DNS](#dns-decode)
-* [RAW Header](#raw-header)
-* [Interface](#interface)
 * [Packager](#packager)
-  1. [Reading packets](#reading-packets-using-packager)
-  2. [Building packets](#building-packets-using-packager)
+  1. [Building packets](#building-packets-using-packager)
+  2. [Reading packets](#reading-packets-using-packager)
+* [General](#general)
+  1. [getpublicip](#getpublicip)
+  2. [maclookup](#maclookup)
+  3. [getmac](#getmac)
+* [Interface](#interface)
+* [Custom Datatypes](#custom-datatypes)
+  1. [INT](#datatype-int)
+  2. [IP](#datatype-ip)
+  3. [MAC](#datatype-mac)
+  4. [ADDR](#datatype-addr)
+  5. [LEN](#datatype-len)
+  6. [NAME](#datatype-name)
+  7. [CHECKSUM](#datatype-checksum)
+* [Protocol Classes](#protocol-classes)
+  1. [ETHERNET](#protocol-ethernet)
+  2. [ARP](#protocol-arp)
+  3. [IPv4](#protocol-ipv4)
+  4. [IPv6](#protocol-ipv6)
+  5. [ICMP](#protocol-icmp)
+  6. [ICMPv6](#protocol-icmpv6)
+  7. [TCP](#protocol-tcp)
+  8. [UDP](#protocol-udp)
+  9. [DNS](#protocol-dns)
 
 
 ____
 
 
+[Go back](#table-of-contents)
 ## OSI model
 
 Open Systems Interconnection model
@@ -45,7 +57,7 @@ Open Systems Interconnection model
 
 No | Layer        | Function                    | Protocol *(included in package)*
 ---|--------------|-----------------------------|------------------------------
-7  | Application  | Application communication   | DNS, MQTT
+7  | Application  | Application communication   | DNS
 6  | Presentation | Representation & Encryption |
 5  | Session      | Interhost communication     |
 4  | Transport    | Connections & QoS           | TCP, UDP
@@ -60,6 +72,7 @@ Introduced to standardize networking protocols, allowing multiple networking dev
 ____
 
 
+[Go back](#table-of-contents)
 ## Installation
 
 The following will show how this package can be installed.
@@ -102,408 +115,470 @@ pip install .
 ____
 
 
-## Building
-
-The following snippets of code will serve as an example when building different types of packets.
-
-
-### ARP request encode
-
-```python
-from packnet import ETHERNET, ARP   # importing ETHERNET and ARP objects
-
-
-src = ["1.1.1.1", 0, "11:11:11:11:11:11"]   # defining source address ["IP", PORT, "MAC"]
-dst = ["2.2.2.2", 0, "22:22:22:22:22:22"]   # defining source address ["IP", PORT, "MAC"]
-
-
-arp = ARP.Header()    # defining ARP Header object
-arp.src = src         # setting source address
-arp.dst = dst         # setting destination address
-arp.op = 1            # setting operation code to 1(request)
-arp.build()           # building ARP Header
-
-ethernet = ETHERNET.Header()  # defining ETHERNET Header object
-ethernet.src = src            # setting source address
-ethernet.dst = dst            # setting destination address
-ethernet.protocol = 0x0806    # setting protocol 0x0806(ARP)
-ethernet.data = arp.packet    # adding ARP Header
-ethernet.build()              # building ETHERNET Header
-
-print(ethernet.packet)    # printing build ARP request including ethernet header
-```
-
-
-### TCP message encode
-
-```python
-from packnet import ETHERNET, IPv4, TCP
-
-
-src = ["1.1.1.1", 0, "11:11:11:11:11:11"]   # defining source address ["IP", PORT, "MAC"]
-dst = ["2.2.2.2", 0, "22:22:22:22:22:22"]   # defining source address ["IP", PORT, "MAC"]
-
-msg = "hello".encode()      # defining TCP payload
-
-tcp = TCP.Header()    # defining TCP Header object
-tcp.src = src         # setting source address
-tcp.dst = dst         # setting destination address
-tcp.seq = 1234        # setting sequence number
-tcp.ack = 4321        # setting acknowledgment number
-tcp.data = msg        # setting payload
-tcp.build()           # building TCP Header
-
-ipv4 = IPv4.Header()    # defining IPv4 Header object
-ipv4.src = src          # setting source address
-ipv4.dst = dst          # setting destination address
-ipv4.id = 31415         # setting identifier
-ipv4.protocol = 6       # setting protocol 6(TCP)
-ipv4.data = tcp.packet  # adding TCP Header
-ipv4.build()            # building IPv4 Header
-
-ethernet = ETHERNET.Header()  # defining ETHERNET Header object
-ethernet.src = src            # setting source address
-ethernet.dst = dst            # setting destination address
-ethernet.protocol = 0x0800    # setting protocol 0x0800(IPv4)
-ethernet.data = ipv4.packet   # adding IPv4 Header
-ethernet.build()              # building ETHERNET Header
-
-print(ethernet.packet)    # printing build UDP packet including IPv4 and ETHERNET headers
-```
-
-
-### UDP message encode
-
-```python
-from packnet import ETHERNET, IPv4, UDP
-
-
-src = ["1.1.1.1", 0, "11:11:11:11:11:11"]   # defining source address ["IP", PORT, "MAC"]
-dst = ["2.2.2.2", 0, "22:22:22:22:22:22"]   # defining source address ["IP", PORT, "MAC"]
-
-msg = "hello".encode()      # defining UDP payload
-
-
-udp = UDP.Header()    # defining UDP Header object
-udp.src = src         # setting source address
-udp.dst = dst         # setting destination address
-udp.data = msg        # setting payload
-udp.build()           # building UDP Header
-
-ipv4 = IPv4.Header()    # defining IPv4 Header object
-ipv4.src = src          # setting source address
-ipv4.dst = dst          # setting destination address
-ipv4.id = 1234          # setting identifier
-ipv4.protocol = 17      # setting protocol 17(UDP)
-ipv4.data = udp.packet  # adding UDP Header
-ipv4.build()            # building IPv4 Header
-
-ethernet = ETHERNET.Header()  # defining ETHERNET Header object
-ethernet.src = src            # setting source address
-ethernet.dst = dst            # setting destination address
-ethernet.protocol = 0x0800    # setting protocol 0x0800(IPv4)
-ethernet.data = ipv4.packet   # adding IPv4 Header
-ethernet.build()              # building ETHERNET Header
-
-print(ethernet.packet)    # printing build UDP packet including IPv4 and ETHERNET headers
-
-```
-
-
-### DNS query encode
-
-```python
-from packnet import ETHERNET, IPv4, UDP, DNS
-
-
-src = ["1.1.1.1", 0, "11:11:11:11:11:11"]   # defining source address ["IP", PORT, "MAC"]
-dst = ["2.2.2.2", 0, "22:22:22:22:22:22"]   # defining source address ["IP", PORT, "MAC"]
-
-
-query = DNS.Query()         # defining DNS Query object
-query.name = "github.com"   # setting name to be resolved
-
-dns = DNS.Header()          # defining DNS Header object
-dns.id = 1234               # setting identifier
-dns.question.append(query)  # adding query to header
-dns.build()                 # building DNS Header
-
-udp = UDP.Header()      # defining UDP Header object
-udp.src = src           # setting source address
-udp.dst = dst           # setting destination address
-udp.data = dns.packet   # adding DNS Header
-udp.build()             # building UDP Header
-
-ipv4 = IPv4.Header()    # defining IPv4 Header object
-ipv4.src = src          # setting source address
-ipv4.dst = dst          # setting destination address
-ipv4.protocol = 17      # setting protocol 17(UDP)
-ipv4.data = udp.packet  # adding UDP Header
-ipv4.build()            # building IPv4 Header
-
-ethernet = ETHERNET.Header()  # defining ETHERNET Header object
-ethernet.src = src            # setting source address
-ethernet.dst = dst            # setting destination address
-ethernet.protocol = 0x0800    # setting protocol 0x0800(IPv4)
-ethernet.data = ipv4.packet   # adding IPv4 Header
-ethernet.build()              # building ETHERNET Header
-
-print(ethernet.packet)    # printing build UDP packet including IPv4 and ETHERNET headers
-```
-
-
-____
-
-
-## Reading
-
-The following snippets of code will serve as an example when reading various types of packets and requiring the information.
-
-
-### ARP decode
-
-```python
-from packnet import ETHERNET, ARP
-
-
-packet = b'""""""\x11\x11\x11\x11\x11\x11\x08\x06\x00\x01\x08\x00\x06\x04\x00\x02\x11\x11\x11\x11\x11\x11\x01\x01\x01\x01""""""\x02\x02\x02\x02'
-# ^ packet which must be decoded
-
-
-ethernet = ETHERNET.Header(packet)    # defining ETHERNET Header object & parsing encoded packet
-ethernet.read()                       # reading ETHERNET Header
-
-print( "ETHERNET HEADER" )            # displaying acquired data
-print( f" length   { ethernet.length }" )
-print( f" source   { ethernet.src }" )
-print( f" target   { ethernet.dst }" )
-print( f" protocol { ethernet.protocol }" )
-print()
-
-
-if ethernet.protocol == 0x0806:     # check if packet contains an ARP Header
-  arp = ARP.Header(ethernet.data)   # defining ARP Header object & parsing encoded data
-  arp.read()                        # reading ARP Header
-
-  print( "ARP HEADER" )             # displaying acquired data
-  print( f" length    { arp.length }" )
-  print( f" source    { arp.src }" )
-  print( f" target    { arp.dst }" )
-  print( f" operation { arp.op }" )
-  print()
-```
-
-
-### TCP decode
-
-```python
-from packnet import ETHERNET, IPv4, TCP
-
-
-packet = b'""""""\x11\x11\x11\x11\x11\x11\x08\x00E\x00\x00(z\xb7@\x00@\x06\xba\x13\x01\x01\x01\x01\x02\x02\x02\x02\x00\x00\x00\x00\x00\x00\x04\xd2\x00\x00\x10\xe1P\x00\xfd\xe8\x96C\x00\x00hello'
-# ^ packet which must be decoded
-
-
-ethernet = ETHERNET.Header(packet)    # defining ETHERNET Header object & parsing encoded packet
-ethernet.read()                       # reading ETHERNET Header
-
-print( "ETHERNET HEADER" )            # displaying acquired data
-print( f" length   { ethernet.length }" )
-print( f" source   { ethernet.src }" )
-print( f" target   { ethernet.dst }" )
-print( f" protocol { ethernet.protocol }" )
-print()
-
-
-if ethernet.protocol == 0x0800:     # check if packet contains an IPv4 Header
-  ipv4 = IPv4.Header(ethernet.data) # defining IPv4 Header object & parsing encoded data
-  ipv4.read()                       # reading IPv4 Header
-
-  print( "IPv4 HEADER" )            # displaying acquired data
-  print( f" length   { ipv4.length }" )
-  print( f" source   { ipv4.src }" )
-  print( f" target   { ipv4.dst }" )
-  print( f" id       { ipv4.id }" )
-  print( f" protocol { ipv4.protocol }" )
-  print()
-
-
-  if ipv4.protocol == 6:          # check if packet contains an TCP Header
-    tcp = TCP.Header(ipv4.data)   # defining TCP Header object & parsing encoded data
-    tcp.read()                    # reading TCP Header
-
-    print( "TCP HEADER" )         # displaying acquired data
-    print( f" length                 { tcp.length }" )
-    print( f" source                 { tcp.src }" )
-    print( f" target                 { tcp.dst }" )
-    print( f" sequence number        { tcp.seq }" )
-    print( f" acknowledgement number { tcp.ack }" )
-    for option in tcp.options:
-      print( f" option kind { option.kind }" )
-    print( f"data { tcp.data }" )
-    print()
-
-```
-
-
-### DNS decode
-
-```python
-from packnet import ETHERNET, IPv4, UDP, DNS
-
-
-packet = b'""""""\x11\x11\x11\x11\x11\x11\x08\x00E\x00\x008\x00\x00@\x00@\x114\xb0\x01\x01\x01\x01\x02\x02\x02\x02\x00\x00\x00\x00\x00$\xe9\xc3\x04\xd2\x00@\x00\x01\x00\x00\x00\x00\x00\x00\x06github\x03com\x00\x00\x05\x00\x01'
-# ^ packet which must be decoded
-
-
-ethernet = ETHERNET.Header(packet)    # defining ETHERNET Header object & parsing encoded packet
-ethernet.read()                       # reading ETHERNET Header
-
-print( "ETHERNET HEADER" )            # displaying acquired data
-print( f" length   { ethernet.length }" )
-print( f" source   { ethernet.src }" )
-print( f" target   { ethernet.dst }" )
-print( f" protocol { ethernet.protocol }" )
-print()
-
-
-if ethernet.protocol == 0x0800:     # check if packet contains an IPv4 Header
-  ipv4 = IPv4.Header(ethernet.data) # defining IPv4 Header object & parsing encoded data
-  ipv4.read()                       # reading IPv4 Header
-
-  print( "IPv4 HEADER" )            # displaying acquired data
-  print( f"length    { ipv4.length }" )
-  print( f" source   { ipv4.src }" )
-  print( f" target   { ipv4.dst }" )
-  print( f" protocol { ipv4.protocol }" )
-  print( f" id       { ipv4.id }" )
-  print()
-
-
-  if ipv4.protocol == 17:         # check if packet contains an UDP Header
-    udp = UDP.Header(ipv4.data)   # defining UDP Header object & parsing encoded data
-    udp.read()                    # reading UDP Header
-
-    print( "UDP HEADER" )         # displaying acquired data
-    print( f" length { udp.length }" )
-    print( f" source { udp.src }" )
-    print( f" target { udp.dst }" )
-    print()
-
-
-    dns = DNS.Header(udp.data)  # defining DNS Header object & parsing encoded data
-    dns.read()                  # reading DNS Header
-
-    print( "DNS HEADER" )         # displaying acquired data
-    print( f" id { dns.id }" )
-    print( f" questions      { len(dns.question) }" )
-    print( f" answer RRs     { len(dns.answer) }" )
-    print( f" authority RRs  { len(dns.authority) }" )
-    print( f" additional RRs { len(dns.additional) }" )
-    print()
-
-    for question in dns.question:
-      print( "DNS QUERY" )         # displaying acquired data
-      print( f"name   { question.name }" )
-      print( f"type   { question.type }" )
-      print( f"classs { question.classif }" )
-      print()
-
-    for answer in dns.answer:
-      print( "DNS ANSWER" )         # displaying acquired data
-      print( f"name   { answer.name }" )
-      print( f"type   { answer.type }" )
-      print( f"classs { answer.classif }" )
-      print( f"ttl    { answer.ttl }" )
-      print( f"cname  { answer.cname }" )
-      print()
-```
-
-
-____
-
-
-## RAW Header
-
-The RAW module is a special module created for a specific but simple reason. It contains raw data which is not decodable by the currently implemented protocols. `RAW.Header` can be used in the same way as the other protocols since it contains the `build` and `read` functions. The only two attributes which are usefull for implementations, are the `data` and `length` attributes. The `data` attribute contains the undecodable data in bytes. The `length` attribute contains the length of the data in bytes.
-
-
-
-____
-
-
-## Interface
-
-Interface is a special module which can be used for creating low-level sockets and automatically requiring address information from the specified interface. Below an example for a use case.  
-**Requires `sudo` rights!**
-
-```python
-from packnet import Interface
-
-
-interface = Interface(card="eth0", port=0, passive=False)
-
-print(interface.addr)
-
-interface.send(b"hello")
-print(interface.recv())
-```
-
-It is alse possible to require a MAC address from a device using the following function:
-
-```python
-import packnet
-
-interface = packnet.Interface()
-ip, port, mac = interface.getmac("192.168.1.1")
-
-print(mac)
-```
-
-
-____
-
-
+[Go back](#table-of-contents)
 ## Packager
 
-The Packager module automates the process of building and reading networking packets.
+Packages is a class to simplify building packets.
 
 
-### Reading packets using Packager
+### Building packets using packager
 
-The following example shows how it is possible to use the Packager class to automatically analyse the different layers of the incoming packet. The example parses the incoming packet into a Packager object and filtering to finally display the requested name of the DNS query.
+This example shows how to build a ARP packet using packager. For more information about the ARP class: [ARP](#protocol-arp)
 
 ```python
 import packnet
 
-interface = packnet.Interface()
+src = ["192.168.0.1", 0, "aa:aa:aa:aa:aa:aa"]   # defining ip, port and mac
+dst = ["192.168.0.2", 0, "bb:bb:bb:bb:bb:bb"]
 
-while True:
-  packet, info = interface.recv()
+package = packnet.Packager()        # creating packager object
+package.fill( packnet.ARP.Header )  # tell packager to make use of the ARP class
+package.src = src                   # set the source and destination addresses
+package.dst = dst
 
-  package = packnet.Packager(packet)
-  package.read()
-
-  # Filtering for DNS Queries
-  if len( package.layer ) < 4: continue
-  if type( package.layer[3] ) != packnet.DNS.Header: continue
-  if len( package.layer[3].answer ) != 0: continue
-  if len( package.layer[3].question ) != 0: continue
-  if package.layer[3].question[0].type != 1: continue
-
-  print( package.layer[3].question[0].name )
+print( package.packet )   # print the created packet in bytes
 ```
 
 
-### Building packets using Packager
+### Reading packets using packager
 
-The following snippet of code describes how Packager automatically completes the required underlying protocols.
+This example also shows the usage of packager using the ARP protocol.
 
 ```python
 import packnet
 
-package = packnet.Packager()
-package.build( packnet.UDP.Header() )   # building a UDP packet
+encoded = b'\xbb\xbb\xbb\xbb\xbb\xbb\xaa\xaa\xaa\xaa\xaa\xaa\x08\x06\x00\x01\x08\x00\x06\x04\x00\x01\xaa\xaa\xaa\xaa\xaa\xaa\xc0\xa8\x00\x01\xbb\xbb\xbb\xbb\xbb\xbb\xc0\xa8\x00\x02'
+# Encoded ARP packet ^ which we want to decode using packager.
+package = packnet.Packager()  # creating packager object
+package.packet = encoded      # decoding the encoded packet
 
-print( package.layer )  # the printed list contains objects for every required protocol
+# displaying the source and destination address
+print( package.src, package.dst )
+
+# looping through all the layers which the packet contained (these layers are not always the same as in the TCP/IP or OSI model)
+for layer in package:
+  print( layer )  
+
+# displaying other useful information about the package object
+package.debug()   
+
+package[0].debug()  # accessing the first layer (ETHERNET)
+package[1].debug()  # accessing the second layer (ETHERNET)
+
+# displaying the operation code of the ARP protocol
+print( package[1].op )  
+
+```
+
+
+____
+
+
+[Go back](#table-of-contents)
+## General
+
+General is a module containing some simple functions for gathering information.
+
+
+### getpublicip
+
+This function does exactly what its name says: it requires the public ip by connecting to ifconfig.me
+
+```python
+import packnet
+
+print( packnet.general.getpublicip() )
+```
+
+
+### maclookup
+
+This function does a lookup for the vendor of the mac address.
+
+```python
+import packnet
+
+result = packnet.general.maclookup("aa:aa:aa:aa:aa:aa") # Try with your own mac
+print( result ) # The function returns `None` when there is no vendor matching the mac
+```
+
+
+### getmac
+
+This function requires the mac address of the given ip address by using ARP.
+**This function only works using root access, due to the use of a low-level socket**
+
+```python
+import packnet
+
+print( packnet.general.getmac("192.168.0.0") )
+# It returns a ADDR object containing the IP address, the port (always zero) and the MAC address
+```
+
+
+____
+
+
+[Go back](#table-of-contents)
+## Interface
+
+This class makes it easier to require your addresses and simplifies the use of sockets.
+
+```python
+import packnet
+
+# the passive argument can be set to `True` if yoy don't want the socket to be bound.
+interface = packnet.Interface(card="eth0", port=0, passive=False, timeout=64)
+
+# display the bound card
+print( interface.card )
+
+# `interface.addr` returns a ADDR object containing the bound address.
+print( interface.addr )
+
+# send requires `bytes` as argument
+interface.send( b"hello" )  # `hello` doesn't work, it needs to be a propoer packet.
+
+# the amount of bytes to be received can be set using the `length` argument
+print( interface.recv(length=1024) )
+```
+
+
+____
+
+
+[Go back](#table-of-contents)
+## Custom datatypes
+
+Custom datatypes made to simplify encoding/decoding will be described here.
+Each example will cover most of the methods/use cases and should not require further explanation.
+
+### datatype INT
+
+```python
+import packnet
+
+integer = packnet.INT(2, size=4, format="big")
+
+print( integer )
+print( integer.to_bytes() )
+print( integer.from_bytes(b"\x00\x00\x00\xff") )  # returns (length of bytes, integer)
+
+integer.integer = 5
+```
+
+
+### datatype IP
+
+This class can be used of IPv4 and IPv6 by setting the version argument.
+
+```python
+import packnet
+
+ip = packnet.IP("192.168.0.0", version=4)
+
+print( ip )
+print( ip.to_bytes() )
+print( ip.from_bytes(b"\xff\xff\xff\xff") )  # returns (length of bytes, ip)
+
+ip.ip = "127.0.0.1"
+```
+
+
+### datatype MAC
+
+```python
+import packnet
+
+mac = packnet.MAC("ff:ff:ff:ff:ff:ff")
+
+print( mac )
+print( mac.to_bytes() )
+print( mac.from_bytes(b"\x00\x00\x00\x00\x00\x00") )  # returns (length of bytes, ip)
+
+mac.mac = "aa:aa:aa:aa:aa:aa"
+```
+
+
+### datatype ADDR
+
+```python
+import packnet
+
+addr = packnet.ADDR(ip="127.0.0.1", version=4, port=0, mac="ff:ff:ff:ff:ff:ff")
+
+print( addr )
+print( addr.mac.to_bytes() )    # same for `ip` and `port`
+print( addr[2].to_bytes() )
+print( addr["mac"].to_bytes() )
+addr.mac.from_bytes(b"\xff\xff\xff\xff\xff\xff")
+
+addr.ip.version = 6
+```
+
+
+### datatype LEN
+
+```python
+import packnet
+
+length = packnet.LEN(header=0, payload=0, total=0, size=1)
+
+print( length )
+length.size = 2
+print( length.header )
+length.header.integer = 20
+print( length )
+print( length.total, length[2], length["total"] )
+```
+
+
+### datatype NAME
+
+```python
+import packnet
+
+name = packnet.NAME("test.com")
+print( name, name.name )
+print( name.to_bytes(header=b"") )  # the `header` argument is used for compression
+name.from_bytes(b"\x05hello\x03com\x00", header=b"")
+name.name = "test.net"
+```
+
+
+### datatype CHECKSUM
+
+```python
+import packnet
+
+checksum = packnet.CHECKSUM(
+  packnet.INT(1, size=2),
+  b"\xff\xff"
+)
+print( checksum.to_bytes() )
+```
+
+
+____
+
+
+[Go back](#table-of-contents)
+## Protocol classes
+
+Every protocol currently implemented will be explained here using examples.  
+It is recommended to use the `Packager` class for decoding. More about `Packager` here: [Packager](#packeger).  
+Each protocol class makes use of the custom datatypes. More about customd datatypes here: [Custom datatypes](#custom-datatypes).  
+Not every attribute and application is covered, but the examples should give a good example for usage.
+
+
+### protocol ETHERNET
+
+```python
+import packnet
+
+# defining `ETHERNET.Header` object
+eth = packnet.ETHERNET.Header()   
+
+# setting attributes
+eth.src.mac = "aa:aa:aa:aa:aa:aa"
+eth.dst.mac = "bb:bb:bb:bb:bb:bb"
+eth.protocol.integer = 0x0806
+
+# printing encoded packet in bytes
+print( eth.packet )
+
+# print debug information
+eth.debug()
+```
+
+
+### protcol ARP
+
+```python
+import packnet
+
+# defining `ARP.Header` object
+arp = packnet.ARP.Header()
+
+# setting attributes
+arp.src.addr = ("255.255.255.255", 0, "ff:ff:ff:ff:ff:ff")
+arp.dst.addr = ("255.255.255.255", 0, "ff:ff:ff:ff:ff:ff")
+arp.op.integer = 2
+
+# printing encoded packet in bytes
+print( arp.packet )
+
+# print debug information
+arp.debug()
+```
+
+
+### protocol IPv4
+
+```python
+import packnet
+
+# defining `IPv4.Header` object
+ipv4 = packnet.IPv4.Header()
+
+# setting attributes
+ipv4.src.ip = "192.168.0.1"
+ipv4.dst.ip = "192.168.0.2"
+ipv4.protocol.integer = 6
+
+# printing encoded packet in bytes
+print( ipv4.packet )
+
+# print debug information
+ipv4.debug()
+```
+
+
+### protocol IPv6
+
+```python
+import packnet
+
+# defining `IPv6.Header` object
+ipv6 = packnet.IPv6.Header()
+
+# setting attributes
+ipv6.src.ip = "ffff::ffff"
+ipv6.dst.ip = "ffff::ffff"
+ipv6.protocol.integer = 58
+
+# printing encoded packet in bytes
+print( ipv6.packet )
+
+# print debug information
+ipv6.debug()
+```
+
+
+### protocol ICMP
+
+```python
+import packnet
+
+# defining `ICMP.Echo` object
+echo = packnet.ICMP.Echo()
+echo.id.integer = 1
+
+# defining `ICMP.Header` object
+icmp = packnet.ICMP.Header()
+
+# setting attributes
+icmp.type.integer = 8
+
+# printing encoded packet in bytes
+print( icmp.packet + echo.packet )
+
+# print debug information
+icmp.debug()
+echo.debug()
+```
+
+
+### protocol ICMPv6
+
+```python
+import packnet
+
+# defining `ICMPv6.Echo` object
+echo = packnet.ICMPv6.Echo()
+echo.id.integer = 1
+
+# defining `ICMPv6.Header` object
+icmpv6 = packnet.ICMPv6.Header()
+
+# setting attributes
+icmpv6.type.integer = 8
+icmpv6.src.ip = "aaaa::aaaa"  # ip's required for calculating checksum
+icmpv6.dst.ip = "bbbb::bbbb"
+
+# printing encoded packet in bytes
+print( icmpv6.packet + echo.packet )
+
+# print debug information
+icmpv6.debug()
+echo.debug()
+```
+
+
+### protocol TCP
+
+```python
+import packnet
+
+# defining `TCP.Header` object
+tcp = packnet.TCP.Header()   
+
+# setting attributes
+tcp.src.ip = "255.255.255.255"  # ip's required for calculating checksum
+tcp.dst.ip = "255.255.255.255"
+tcp.seq.integer = 3
+tcp.ack.integer = 100
+tcp.src.port = 1234
+tcp.dst.poprt = 4321
+
+# adding options
+for _ in range(4):
+  tcp.options.append( packnet.TCP.Padding() )
+
+# printing encoded packet in bytes
+print( tcp.packet )
+
+# print debug information
+tcp.debug()
+```
+
+
+### protocol UDP
+
+```python
+import packnet
+
+# defining `UDP.Header` object
+udp = packnet.UDP.Header()
+
+# setting attributes
+udp.src.ip = "255.255.255.255"  # ip's required for calculating checksum
+udp.dst.ip = "255.255.255.255"
+udp.src.port = 4321
+udp.dst.port = 1234
+
+# adding payload
+udp.payload = "hello".encode()
+
+# printing encoded packet in bytes
+print( udp.packet )
+
+# print debug information
+udp.debug()
+```
+
+
+### protocol DNS
+
+```python
+import packnet
+
+# definign `DNS.Query` object
+query = packnet.DNS.Query()
+query.name.name = "test.com"
+
+# defining `DNS.Header` object
+dns = packnet.DNS.Header()
+
+# setting attributes
+dns.id.integer = 1234
+
+# adding query to header
+dns.question.append( query )
+
+# printing encoded packet in bytes
+print( dns.packet )
+
+# print debug information
+dns.debug()
 ```
