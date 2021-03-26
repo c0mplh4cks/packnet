@@ -71,8 +71,8 @@ class Echo(Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.id = INT( 0, size=2 )
-        self.seq = INT( randint(0, 0xffff), size=2 )
+        self.id = INT( randint(0, 0xffff), size=2 )
+        self.seq = INT( 0, size=2 )
         self.timestamp = INT( int(time()), size=8, format="little" )
 
         self.structure = [
