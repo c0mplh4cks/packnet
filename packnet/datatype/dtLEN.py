@@ -26,10 +26,10 @@ from . import INT
 # === LEN === #
 class LEN:
     def __init__(self, header=0, payload=0, total=0, size=2):
-        self.__size = size
         self.header = INT( 0 )
         self.payload = INT( 0 )
         self.__total = INT( 0 )
+        self.size = size
 
 
     def __str__(self):
@@ -66,6 +66,7 @@ class LEN:
 
     @size.setter
     def size(self, value):
+        self.__size = value
         self.header.size = value
         self.payload.size = value
         self.total.size = value

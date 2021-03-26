@@ -25,9 +25,10 @@ from . import IP, MAC, INT
 
 # === ADDR === #
 class ADDR:
-    def __init__(self, ip="255.255.255.255", port=0, mac="ff:ff:ff:ff:ff:ff", version=4):
-        self.addr = [ip, port, mac]
-        self.version = version
+    def __init__(self, ip="255.255.255.255", port=0, mac="ff:ff:ff:ff:ff:ff", version=4, size=2):
+        self.__ip = IP( ip, version=version )
+        self.__port = INT( port, size=size )
+        self.__mac = MAC( mac )
 
 
     def __str__(self):
@@ -56,15 +57,6 @@ class ADDR:
             raise IndexError
 
 
-    @property
-    def version(self):
-        return self.ip.version
-
-
-    @version.setter
-    def version(self, value):
-        self.ip.version = value
-
 
     @property
     def ip(self):
@@ -73,7 +65,10 @@ class ADDR:
 
     @ip.setter
     def ip(self, value):
-        self.__ip = IP(value) if type(value) == str else value
+        if type(value) == str:
+            self.__ip.ip = value
+        elif type(value) == IP:
+            self.__ip = value
 
 
     @property
@@ -83,7 +78,10 @@ class ADDR:
 
     @port.setter
     def port(self, value):
-        self.__port = INT(value, 2, "big") if type(value) == int else value
+        if type(value) == str:
+            self.__port.integer = value
+        elif type(value) == INT:
+            self.__port = value
 
 
     @property
@@ -93,7 +91,10 @@ class ADDR:
 
     @mac.setter
     def mac(self, value):
-        self.__mac = MAC(value) if type(value) == str else value
+        if type(value) == str:
+            self.__mac.mac = value
+        elif type(value) == MAC:
+            self.__mac = value
 
 
     @property
