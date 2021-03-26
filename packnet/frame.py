@@ -120,9 +120,12 @@ class Frame:
 
 
     def debug(self):
-        print( type(self) )
+        print( "# === START DEBUG INFO === #" )
         print( self )
+
+        print( f"\n{'attribute name':<20}value\n")
         print( f"{'len':<20}{self.len}")
         for attrstr in self.structure:
             print( f"{attrstr:<20}{self._getattr(attrstr)}" )
         print( f"{'payload':<20}{self.payload}")
+        print( "\n# === END DEBUG INFO === #" )
