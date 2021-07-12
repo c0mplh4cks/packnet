@@ -79,7 +79,7 @@ class NAME:
                 return cls.decode(encoded)
             elif (l >> 6) == 3:
                 pointer = unpack( ">H", encoded[i:i+2] )[0] - 0xc000
-                return i+2, cls.decode( encoded[:i] + header[pointer:] )[1]
+                return i+2, cls.decompress( encoded[:i] + header[pointer:], header )[1]
 
             i += 1+l
 
