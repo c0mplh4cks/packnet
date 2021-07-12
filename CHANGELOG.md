@@ -177,3 +177,12 @@
   * **[~]** Adjusted usage of `ICMPv6` and `IPv6` to work with improved `IP` datatype
   * **[~]** Fixed mistake regarding `randint` in `ICMP.Echo`
   * **[~]** Updated usage of ipv6 in `DNS`
+
+
+### v3.0.2
+
+  * **[~]** Adjusted (spelling) mistakes in README.md file
+  * **[~]** Minor readability improvements in `frame.py`
+  * **[~]** Added recursion to fix bug in `decompress` function in `dtNAME`
+  * **[~]** Small improvements to `DNS`
+  * **[~]** Added exception handler to `getmac` function in `general`

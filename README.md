@@ -227,19 +227,19 @@ This class makes it easier to require your addresses and simplifies the use of s
 ```python
 import packnet
 
-# the passive argument can be set to `True` if yoy don't want the socket to be bound.
+# the passive argument can be set to `True` if you don't want the socket to be bound.
 interface = packnet.Interface(card="eth0", port=0, passive=False, timeout=64)
 
-# display the bound card
+# display the bounded card
 print( interface.card )
 
 # `interface.addr` returns a ADDR object containing the bound address.
 print( interface.addr )
 
-# send requires `bytes` as argument
-interface.send( b"hello" )  # `hello` doesn't work, it needs to be a propoer packet.
+# `send` requires `bytes` as argument
+interface.send( b"hello" )  # `hello` doesn't work, it needs to be a proper packet.
 
-# the amount of bytes to be received can be set using the `length` argument
+# the amount of bytes to be received, can be set using the `length` argument
 print( interface.recv(length=1024) )
 ```
 
