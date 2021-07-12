@@ -94,7 +94,7 @@ class Header(Frame):
 
         for section in (self.question, self.answer, self.authority, self.additional):
             for part in section:
-                i += part.from_bytes( packet[i:], header=packet[:i] )[0]
+                i += part.from_bytes( packet[i:], header=packet )[0]
 
         self.payload = packet[i:]
         self.rlen()
@@ -144,7 +144,8 @@ class Answer(Frame):
             "type",
             "classif",
             "ttl",
-            "len.payload"
+            "len.payload"#,
+            #"cname"
         ]
 
 
@@ -155,8 +156,8 @@ class Answer(Frame):
         return super().to_bytes(*args, **kwargs)
 
 
-    def from_bytes(self, *args, **kwargs):
-        i = super().from_bytes(*args, **kwargs)[0]
+    def from_bytes(self, packet=b"", header=b"", *args, **kwargs):
+        i = super().from_bytes(packet, header, *args, **kwargs)[0]
 
         if self.type.integer == 1:
             self.cname = IP( version=4 )
@@ -165,7 +166,7 @@ class Answer(Frame):
         else:
             self.cname = NAME()
 
-        i += self.cname.from_bytes( packet[i:] )[0]
+        i += self.cname.from_bytes( packet[i:], header )[0]
         self.payload = packet[i:]
         self.rlen()
 
