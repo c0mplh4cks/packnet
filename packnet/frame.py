@@ -123,7 +123,7 @@ class Frame:
         print( "# === START DEBUG INFO === #" )
         print( self )
 
-        print( f"\n{'attribute name':<20}value\n")
+        print( f"\n{'ATTRIBUTE NAME':<20}VALUE\n")
         print( f"{'len':<20}{self.len}")
         for attrstr in self.structure:
             print( f"{attrstr:<20}{self._getattr(attrstr)}" )
