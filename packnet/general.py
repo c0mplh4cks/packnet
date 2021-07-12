@@ -73,8 +73,11 @@ def getmac(ip, interface=None, timeout=3):
         except socket.timeout:
             return None
 
-        package = Packager()
-        package.packet = packet
+        try:
+            package = Packager()
+            package.packet = packet
+        except:
+            continue
 
         if type( package[1] ) != ARP.Header: continue
         if str(package.dst.mac) != str(interface.addr.mac) != str(package[1].dst.mac): continue
